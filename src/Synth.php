@@ -8,6 +8,7 @@ use Blinq\LLM\Entities\ChatMessage;
 use Blinq\LLM\Entities\ChatStream;
 use Blinq\LLM\Exceptions\ApiException;
 use Blinq\Synth\Commands\SynthCommand;
+use Blinq\Synth\Exceptions\MissingOpenAIKeyException;
 
 class Synth
 {
@@ -25,11 +26,11 @@ class Synth
         $this->smallModel = config('synth.small_model', $this->smallModel);
         $this->largeModel = config('synth.large_model', $this->largeModel);
 
-        if (! config('synth.key', env('OPENAI_KEY'))) {
-            throw new \Exception('OPENAI_KEY not set, please set it in your .env or config/synth.php');
+        if (! config('synth.key', config('synth.key'))) {
+            throw MissingOpenAIKeyException::make();
         }
 
-        $this->ai = (new Client(new ApiConfig('openai', config('synth.key', env('OPENAI_KEY')))));
+        $this->ai = (new Client(new ApiConfig('openai', config('synth.key'))));
     }
 
     public function loadSystemMessage(string $name)
