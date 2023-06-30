@@ -8,7 +8,7 @@ namespace Blinq\Synth\Modules;
  */
 class Files extends Module
 {
-    public $files = [];
+    public array $files = [];
 
     public function name(): string
     {
