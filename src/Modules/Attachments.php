@@ -12,6 +12,8 @@ class Attachments extends Module
 {
     public $attachments = [];
 
+    public const FILES_DELIMITER = '    => ';
+
     public function name(): string
     {
         return 'Attachments';
@@ -28,7 +30,7 @@ class Attachments extends Module
         ];
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
         if ($key === 'attach') {
             $this->searchAndAttachFiles();
@@ -38,7 +40,7 @@ class Attachments extends Module
         }
     }
 
-    public function viewAttachments()
+    public function viewAttachments(): void
     {
         foreach ($this->attachments as $key => $x) {
             $this->cmd->comment($key);
@@ -54,7 +56,7 @@ class Attachments extends Module
         $this->cmd->newLine();
     }
 
-    public function clearAttachments()
+    public function clearAttachments(): void
     {
         $this->attachments = [];
 
@@ -62,7 +64,7 @@ class Attachments extends Module
         $this->cmd->newLine();
     }
 
-    public function addAttachment($key, $value)
+    public function addAttachment($key, $value): void
     {
         $base = basename($key);
         $this->cmd->comment("Attaching $base");
@@ -70,12 +72,12 @@ class Attachments extends Module
         $this->setAttachmentsToChatHistory();
     }
 
-    public function removeAttachment($key)
+    public function removeAttachment($key): void
     {
         unset($this->attachments[$key]);
     }
 
-    public function notice()
+    public function notice(): void
     {
         if (count($this->attachments) > 0) {
             $count = count($this->attachments);
@@ -85,7 +87,7 @@ class Attachments extends Module
         }
     }
 
-    public function searchAndAttachFiles()
+    public function searchAndAttachFiles(): void
     {
         $this->cmd->info('Type something to search for a file to attach');
         $this->cmd->line("Search and end with '*' to include all matching files");
@@ -129,11 +131,29 @@ class Attachments extends Module
                     break;
                 }
             } else {
-                $query = (string) str($file)->before('    => ');
+                $query = (string) str($file)->before(self::FILES_DELIMITER);
                 $files = $this->search($query);
 
-                foreach ($files as $file) {
-                    $this->addAttachmentFromFile($file);
+                $addFilesChoice = $this->cmd->choice(
+                    'Found '.count($files).' files',
+                    ['all' => 'Add All Files', 'choose' => 'Choose which files to add'],
+                    'all'
+                );
+
+                if ($addFilesChoice == 'choose') {
+                    foreach ($files as $count => $file) {
+
+                        $fileCount = $count + 1;
+                        $fileName = (string) str($file)->after(self::FILES_DELIMITER);
+
+                        if ($this->cmd->confirm("File {$fileCount}: {$fileName}", true)) {
+                            $this->addAttachmentFromFile($file);
+                        }
+                    }
+                } else {
+                    foreach ($files as $file) {
+                        $this->addAttachmentFromFile($file);
+                    }
                 }
             }
 
@@ -141,7 +161,7 @@ class Attachments extends Module
         }
     }
 
-    public function search($search)
+    public function search($search): array
     {
         $files = [];
         $limit = config('synth.search_limit', 10);
@@ -160,7 +180,7 @@ class Attachments extends Module
             // Make it relative to base_path
             $path = str_replace($base.'/', '', $path);
 
-            $files[] = $search.'    => '.$path;
+            $files[] = $search.self::FILES_DELIMITER.$path;
 
             $count++;
 
@@ -172,10 +192,10 @@ class Attachments extends Module
         return $files;
     }
 
-    public function addAttachmentFromFile($file)
+    public function addAttachmentFromFile($file): bool
     {
-        $query = (string) str($file)->before('    => ');
-        $filename = (string) str($file)->after('    => ');
+        $query = (string) str($file)->before(self::FILES_DELIMITER);
+        $filename = (string) str($file)->after(self::FILES_DELIMITER);
 
         if ($query === 'exit') {
             return false;
@@ -207,7 +227,7 @@ class Attachments extends Module
         $this->addAttachment($key, $content.$args);
     }
 
-    public function setAttachmentsToChatHistory()
+    public function setAttachmentsToChatHistory(): void
     {
         $history = $this->cmd->synth->ai->getHistory();
 
@@ -235,7 +255,7 @@ class Attachments extends Module
         return $key ? $this->attachments[$key] ?? null : $this->attachments;
     }
 
-    public function getAttachmentsAsString()
+    public function getAttachmentsAsString(): string
     {
         $string = '[attached_files]'.PHP_EOL;
 
