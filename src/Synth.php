@@ -20,17 +20,20 @@ class Synth
 
     public $model = 'gpt-3.5-turbo-0613';
 
+    /**
+     * @throws MissingOpenAIKeyException
+     */
     public function __construct(public SynthCommand $cmd)
     {
         $this->model = config('synth.small_model', $this->smallModel);
         $this->smallModel = config('synth.small_model', $this->smallModel);
         $this->largeModel = config('synth.large_model', $this->largeModel);
 
-        if (! config('synth.key', config('synth.key'))) {
+        if (! config('synth.openai_key')) {
             throw MissingOpenAIKeyException::make();
         }
 
-        $this->ai = (new Client(new ApiConfig('openai', config('synth.key'))));
+        $this->ai = (new Client(new ApiConfig('openai', config('synth.openai_key'))));
     }
 
     public function loadSystemMessage(string $name)
@@ -89,7 +92,7 @@ class Synth
         });
     }
 
-    public $allowed = [
+    public array $allowed = [
         'save_migrations',
         'save_files',
     ];
