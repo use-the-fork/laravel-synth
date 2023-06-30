@@ -244,7 +244,7 @@ class Attachments extends Module
 
         if (! $found) {
             $this->cmd->synth->ai->addHistory(new ChatMessage('user', $this->getAttachmentsAsString()));
-            $history = $this->cmd->synth->ai->getHistory();
+            // $history = $this->cmd->synth->ai->getHistory();
         }
 
         // ray($history);
