@@ -1,0 +1,25 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * Model {{ class }}
+ *
+ * ...@property attributes
+ * ...@property-read attributes
+ */
+class {{ class }} extends Model
+{
+    use HasFactory;
+
+    // table
+
+    // fillable
+
+    // casts
+
+    // relations
+}

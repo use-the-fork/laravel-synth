@@ -23,31 +23,31 @@ class Chat extends Module
         ];
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
         $forceSaveFiles = $key === 'make';
 
-        $this->cmd->synth->loadSystemMessage('chat');
+        $this->synthController->cmd->synth->loadSystemMessage('chat');
         $schema = include __DIR__.'/../Prompts/chat.schema.php';
         $currentQuestion = $key === 'make' ? 'What should I make?' : 'How can I help you?';
 
         while (true) {
-            $answer = $this->cmd->ask($currentQuestion);
+            $answer = $this->synthController->cmd->ask($currentQuestion);
 
             if ($answer == 'exit' || ! $answer) {
                 break;
             }
 
-            $this->cmd->synth->chat($answer, [
+            $this->synthController->cmd->synth->chat($answer, [
                 ...$schema,
                 ...($forceSaveFiles ? [
                     'function_call' => ['name' => 'save_files'],
                 ] : []),
             ]);
-            $this->cmd->synth->handleFunctionsForLastMessage();
+            $this->synthController->cmd->synth->handleFunctionsForLastMessage();
 
-            $this->cmd->newLine(2);
-            $this->cmd->comment("Press enter to accept and continue, type 'exit' to discard, or ask a follow up question.");
+            $this->synthController->cmd->newLine(2);
+            $this->synthController->cmd->comment("Press enter to accept and continue, type 'exit' to discard, or ask a follow up question.");
             $currentQuestion = 'You';
         }
     }

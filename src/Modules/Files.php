@@ -2,6 +2,8 @@
 
 namespace Blinq\Synth\Modules;
 
+use Blinq\Synth\Controllers\SynthController;
+
 /**
  * This file is a module in the Synth application, specifically for handling file operations.
  * It provides functionality to write files to the filesystem, manage unwritten files, and clear files.
@@ -17,7 +19,8 @@ class Files extends Module
 
     public function register(): array
     {
-        $this->cmd->mainMenu->on('show', function () {
+        $synthController = app(SynthController::class);
+        $synthController->mainMenu->on('show', function () {
             $this->notice();
         });
 
@@ -30,37 +33,37 @@ class Files extends Module
     {
         if (count($this->files) > 0) {
             $count = count($this->files);
-            $this->cmd->info("You have $count unwritten files:");
+            $this->synthController->cmd->info("You have $count unwritten files:");
             echo collect($this->files)->keys()->map(fn ($x) => '- '.$x)->implode(PHP_EOL);
-            $this->cmd->newLine(2);
+            $this->synthController->cmd->newLine(2);
         }
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
         $this->write();
     }
 
     public function write()
     {
-        $this->cmd->info('Writing files to the filesystem...');
-        $this->cmd->newLine();
+        $this->synthController->cmd->info('Writing files to the filesystem...');
+        $this->synthController->cmd->newLine();
 
         $base = config('synth.file_base', base_path());
 
         foreach ($this->files as $file => $contents) {
             $basename = basename($file);
 
-            $this->cmd->comment($file);
-            $this->cmd->comment('----');
-            $this->cmd->line($contents);
+            $this->synthController->cmd->comment($file);
+            $this->synthController->cmd->comment('----');
+            $this->synthController->cmd->line($contents);
 
             $fullFile = $base.'/'.$file;
 
             $fileExists = file_exists($fullFile);
 
-            if ($this->cmd->confirm("Write $basename?".($fileExists ? ' (File already exists)' : ''), ! $fileExists)) {
-                $file = $this->cmd->askWithCompletion('Write path', [$file], $file);
+            if ($this->synthController->cmd->confirm("Write $basename?".($fileExists ? ' (File already exists)' : ''), ! $fileExists)) {
+                $file = $this->synthController->cmd->askWithCompletion('Write path', [$file], $file);
 
                 if ($file) {
                     $file = $base.'/'.$file;
@@ -72,14 +75,14 @@ class Files extends Module
 
                     file_put_contents($file, $contents);
 
-                    $this->cmd->info("Written $file");
+                    $this->synthController->cmd->info("Written $file");
                 }
             }
         }
 
         $this->clearFiles();
-        $this->cmd->info('Done!');
-        $this->cmd->newLine();
+        $this->synthController->cmd->info('Done!');
+        $this->synthController->cmd->newLine();
     }
 
     public function addFile($name, $contents)

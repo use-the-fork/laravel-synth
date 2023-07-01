@@ -2,16 +2,18 @@
 
 namespace Blinq\Synth;
 
-use Blinq\LLM\Client;
-use Blinq\LLM\Config\ApiConfig;
 use Blinq\LLM\Entities\ChatMessage;
 use Blinq\LLM\Entities\ChatStream;
 use Blinq\LLM\Exceptions\ApiException;
-use Blinq\Synth\Commands\SynthCommand;
+use Blinq\Synth\Controllers\SynthController;
 use Blinq\Synth\Exceptions\MissingOpenAIKeyException;
+use OpenAI;
+use OpenAI\Client;
 
 class Synth
 {
+    protected SynthController $synthController;
+
     public Client $ai;
 
     public $smallModel = 'gpt-3.5-turbo-0613';
@@ -23,7 +25,7 @@ class Synth
     /**
      * @throws MissingOpenAIKeyException
      */
-    public function __construct(public SynthCommand $cmd)
+    public function __construct()
     {
         $this->model = config('synth.small_model', $this->smallModel);
         $this->smallModel = config('synth.small_model', $this->smallModel);
@@ -32,12 +34,18 @@ class Synth
         if (! config('synth.openai_key')) {
             throw MissingOpenAIKeyException::make();
         }
+        $this->ai = OpenAI::client(config('synth.openai_key'));
+    }
 
-        $this->ai = (new Client(new ApiConfig('openai', config('synth.openai_key'))));
+    public function setSynthController(): void
+    {
+        $this->synthController = app(SynthController::class);
     }
 
     public function loadSystemMessage(string $name)
     {
+
+        $messageStore[0] = ['role' => 'user', 'content' => 'Hello!'];
         $this->ai->setSystemMessage(include __DIR__."/Prompts/$name.system.php");
     }
 

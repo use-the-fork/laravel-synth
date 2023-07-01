@@ -3,15 +3,14 @@
 namespace Blinq\Synth\Modules;
 
 use Blinq\LLM\Entities\ChatMessage;
+use Blinq\Synth\Controllers\SynthController;
 
 /**
  * This file is a module in the Synth application, specifically for handling attachments.
  * It provides functionality to attach and view files, search and attach files, and manage attachments.
  */
-class Attachments extends Module
+final class Attachments extends Module
 {
-    public $attachments = [];
-
     public const FILES_DELIMITER = '    => ';
 
     public function name(): string
@@ -21,7 +20,10 @@ class Attachments extends Module
 
     public function register(): array
     {
-        $this->cmd->mainMenu->on('show', function () {
+
+        $synthController = app(SynthController::class);
+
+        $synthController->mainMenu->on('show', function () {
             $this->notice();
         });
 
@@ -42,64 +44,54 @@ class Attachments extends Module
 
     public function viewAttachments(): void
     {
-        foreach ($this->attachments as $key => $x) {
-            $this->cmd->comment($key);
-            $this->cmd->comment('----');
-            $this->cmd->line($x);
-            $this->cmd->newLine();
+
+        foreach ($this->synthController->getAttachedFiles() as $key => $x) {
+            $this->synthController->cmd->comment($key);
+            $this->synthController->cmd->comment('----');
+            $this->synthController->cmd->getOutput()->writeln($x->getFormatted());
+            $this->synthController->cmd->newLine();
         }
 
-        if (count($this->attachments) === 0) {
-            $this->cmd->comment('No attachments');
+        if (count($this->synthController->getAttachedFiles()) === 0) {
+            $this->synthController->cmd->comment('No attachments');
         }
 
-        $this->cmd->newLine();
-    }
-
-    public function clearAttachments(): void
-    {
-        $this->attachments = [];
-
-        $this->cmd->comment('Attachments cleared');
-        $this->cmd->newLine();
-    }
-
-    public function addAttachment($key, $value): void
-    {
-        $base = basename($key);
-        $this->cmd->comment("Attaching $base");
-        $this->attachments[$key] = $value;
-        $this->setAttachmentsToChatHistory();
-    }
-
-    public function removeAttachment($key): void
-    {
-        unset($this->attachments[$key]);
+        $this->synthController->cmd->newLine();
     }
 
     public function notice(): void
     {
-        if (count($this->attachments) > 0) {
-            $count = count($this->attachments);
-            $this->cmd->info("You have $count attachments:");
-            echo collect($this->attachments)->keys()->map(fn ($x) => '- '.basename($x))->implode(PHP_EOL);
-            $this->cmd->newLine(2);
+        if (count($this->synthController->getAttachedFiles()) > 0) {
+            $count = count($this->synthController->getAttachedFiles());
+            $this->synthController->cmd->info("You have $count attachments:");
+            echo collect($this->synthController->getAttachedFiles())->keys()->map(fn ($x) => '- '.basename($x))->implode(PHP_EOL);
+            $this->synthController->cmd->newLine(2);
         }
     }
 
     public function searchAndAttachFiles(): void
     {
-        $this->cmd->info('Type something to search for a file to attach');
-        $this->cmd->line("Search and end with '*' to include all matching files");
-        $this->cmd->newLine();
-        $this->cmd->line("exit   - Press enter or type 'exit' to discard");
-        $this->cmd->line('view   - to view the current attachments');
-        $this->cmd->line('clear  - to clear the current attachments');
+        $this->synthController->cmd->info('Type something to search for a file to attach');
+        $this->synthController->cmd->line("Search and end with '*' to include all matching files");
+        $this->synthController->cmd->newLine();
+        $this->synthController->cmd->line("exit   - Press enter or type 'exit' to discard");
+        $this->synthController->cmd->line('view   - to view the current attachments');
+        $this->synthController->cmd->line('clear  - to clear the current attachments');
 
         while (true) {
             $hasWildcard = false;
 
-            $file = $this->cmd->askWithCompletion('Search', function ($x) use (&$hasWildcard) {
+            $file = $this->synthController->cmd->askWithCompletion('Search', function ($x) use (&$hasWildcard) {
+
+                //Safety checks when clearing or viewing attachments
+                if ($x === 'view') {
+                    return ['view'];
+                }
+
+                if ($x === 'clear') {
+                    return ['clear'];
+                }
+
                 if (! $x) {
                     return [];
                 }
@@ -108,8 +100,6 @@ class Attachments extends Module
                 }
 
                 $hasWildcard = str($x)->contains('*');
-                // $x = str_replace('*', '', $x);
-
                 $files = $this->search($x);
 
                 return $files ?? [];
@@ -121,7 +111,7 @@ class Attachments extends Module
                 continue;
             }
             if ($file === 'clear') {
-                $this->clearAttachments();
+                $this->synthController->clearAttachedFiles();
 
                 continue;
             }
@@ -134,7 +124,7 @@ class Attachments extends Module
                 $query = (string) str($file)->before(self::FILES_DELIMITER);
                 $files = $this->search($query);
 
-                $addFilesChoice = $this->cmd->choice(
+                $addFilesChoice = $this->synthController->cmd->choice(
                     'Found '.count($files).' files',
                     ['all' => 'Add All Files', 'choose' => 'Choose which files to add'],
                     'all'
@@ -146,7 +136,7 @@ class Attachments extends Module
                         $fileCount = $count + 1;
                         $fileName = (string) str($file)->after(self::FILES_DELIMITER);
 
-                        if ($this->cmd->confirm("File {$fileCount}: {$fileName}", true)) {
+                        if ($this->synthController->cmd->confirm("File {$fileCount}: {$fileName}", true)) {
                             $this->addAttachmentFromFile($file);
                         }
                     }
@@ -157,7 +147,6 @@ class Attachments extends Module
                 }
             }
 
-            $this->setAttachmentsToChatHistory();
         }
     }
 
@@ -209,12 +198,12 @@ class Attachments extends Module
             $base = config('synth.file_base', base_path());
             $contents = file_get_contents($base.'/'.$filename);
         } catch (\Throwable $th) {
-            $this->cmd->error("Could not find file $filename");
+            $this->synthController->cmd->error("Could not find file $filename");
 
             return true;
         }
 
-        $this->addAttachment($filename, $contents);
+        $this->synthController->addAttachedFile($filename, $contents);
 
         return true;
     }
@@ -224,48 +213,6 @@ class Attachments extends Module
         $content = $message->content;
         $args = $message->function_call['arguments'] ?? '';
 
-        $this->addAttachment($key, $content.$args);
-    }
-
-    public function setAttachmentsToChatHistory(): void
-    {
-        $history = $this->cmd->synth->ai->getHistory();
-
-        $found = false;
-        /**
-         * @var ChatMessage $message
-         */
-        foreach ($history as &$message) {
-            if ($message->role == 'user' && str($message->content)->contains('[attached_files]')) {
-                $message->content = $this->getAttachmentsAsString();
-                $found = true;
-            }
-        }
-
-        if (! $found) {
-            $this->cmd->synth->ai->addHistory(new ChatMessage('user', $this->getAttachmentsAsString()));
-            // $history = $this->cmd->synth->ai->getHistory();
-        }
-
-        // ray($history);
-    }
-
-    public function getAttachments(string $key = null)
-    {
-        return $key ? $this->attachments[$key] ?? null : $this->attachments;
-    }
-
-    public function getAttachmentsAsString(): string
-    {
-        $string = '[attached_files]'.PHP_EOL;
-
-        foreach ($this->attachments as $key => $value) {
-            $string .= "$key:".PHP_EOL;
-            $string .= $value.PHP_EOL;
-        }
-
-        $string .= '[/attached_files]'.PHP_EOL;
-
-        return $string;
+        $this->synthController->addAttachedFile($key, $content.$args);
     }
 }

@@ -3,6 +3,7 @@
 namespace Blinq\Synth;
 
 use Blinq\Synth\Commands\SynthCommand;
+use Blinq\Synth\Controllers\SynthController;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -25,5 +26,19 @@ class SynthServiceProvider extends PackageServiceProvider
             // ->hasViews()
             // ->hasMigration('create_synth_table')
             ->hasCommand(SynthCommand::class);
+    }
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        $this->app->singleton(
+            abstract: SynthController::class,
+            concrete: fn () => new SynthController(
+                synth: new Synth(),
+                mainMenu: new MainMenu(),
+                modules: new Modules(),
+            ),
+        );
     }
 }

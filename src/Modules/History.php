@@ -22,19 +22,19 @@ class History extends Module
         ];
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
-        $history = $this->cmd->synth->ai->getHistory();
+        $history = $this->synthController->synth->ai->getHistory();
 
         /**
          * @var ChatMessage $item
          */
         foreach ($history as $item) {
-            $this->cmd->comment($item->role);
-            $this->cmd->comment('----');
-            $this->cmd->line($item->content ?? $item->function_call['name'] ?? '');
-            $this->cmd->newLine();
-            $this->cmd->newLine();
+            $this->synthController->cmd->comment($item->role);
+            $this->synthController->cmd->comment('----');
+            $this->synthController->cmd->line($item->content ?? $item->function_call['name'] ?? '');
+            $this->synthController->cmd->newLine();
+            $this->synthController->cmd->newLine();
         }
     }
 }

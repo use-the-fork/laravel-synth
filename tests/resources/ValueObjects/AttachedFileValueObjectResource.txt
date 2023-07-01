@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ExampleModel;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class ExampleController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth:api')->except(['index', 'show']);
+
+        if(1 == 2){
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        foreach (['index', 'show'] as $method) {
+            $this->middleware("scope:{$method}")->only($method);
+        }
+    }
+
+    public function destroy(ExampleModel $example)
+    {
+        $example->delete();
+        return response()->json(null, 204);
+    }
+
+    public function index()
+    {
+        return ExampleModel::all();
+    }
+
+    public function show(ExampleModel $example)
+    {
+        return $example;
+    }
+
+    public function store(Request $request)
+    {
+            $validated = $request->validate([
+                'name' => ['required', 'string'],
+            ]);
+            $example = ExampleModel::create($validated);
+            return $example;
+    }
+
+    public function update(Example $example, Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string'],
+        ]);
+        $example->update($validated);
+        return $example;
+    }
+}

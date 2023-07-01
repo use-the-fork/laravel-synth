@@ -20,7 +20,7 @@ class Schema extends Module
 
     public function register(): array
     {
-        $this->cmd->mainMenu->on('show', function () {
+        $this->synthController->mainMenu->on('show', function () {
             $this->notice();
         });
 
@@ -29,7 +29,7 @@ class Schema extends Module
         ];
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
         // Get all tables in the database
         $tables = collect(DB::select('SHOW TABLES'))
@@ -59,7 +59,7 @@ class Schema extends Module
 
     public function addToChatHistory(string $string)
     {
-        $history = $this->cmd->synth->ai->getHistory();
+        $history = $this->synthController->synth->ai->getHistory();
 
         $found = false;
         /**
@@ -73,7 +73,7 @@ class Schema extends Module
         }
 
         if (! $found) {
-            $this->cmd->synth->ai->addHistory(new ChatMessage('user', $string));
+            $this->synthController->synth->ai->addHistory(new ChatMessage('user', $string));
             // $history = $this->cmd->synth->ai->getHistory();
         }
 
@@ -83,8 +83,8 @@ class Schema extends Module
     public function notice()
     {
         if ($this->schema) {
-            $this->cmd->info('Schema is attached to this conversation.');
-            $this->cmd->newLine(2);
+            $this->synthController->cmd->info('Schema is attached to this conversation.');
+            $this->synthController->cmd->newLine(2);
         }
     }
 }

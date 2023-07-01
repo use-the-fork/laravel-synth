@@ -2,10 +2,8 @@
 
 namespace Blinq\Synth\Commands;
 
+use Blinq\Synth\Controllers\SynthController;
 use Blinq\Synth\Functions;
-use Blinq\Synth\MainMenu;
-use Blinq\Synth\Modules;
-use Blinq\Synth\Synth;
 use Illuminate\Console\Command;
 
 /**
@@ -16,26 +14,16 @@ class SynthCommand extends Command
 {
     public $signature = 'synth';
 
-    public $description = 'My command';
-
-    public Synth $synth;
-
-    public MainMenu $mainMenu;
-
-    public Modules $modules;
+    public $description = 'Synth is a Laravel tool that helps you generate code and perform various tasks in your Laravel application.';
 
     public function handle(): int
     {
         Functions::registerAll();
 
-        $this->synth = new Synth($this);
-        $this->synth->handleExitSignal();
-        $this->synth->handleStream();
+        $synthController = app(SynthController::class);
+        $synthController->setSynthCommand($this);
+        $synthController->modules->registerModules();
 
-        $this->mainMenu = new MainMenu($this);
-        $this->mainMenu->welcome();
-        $this->modules = new Modules($this);
-
-        return $this->mainMenu->handle();
+        return $synthController->mainMenu->handle();
     }
 }

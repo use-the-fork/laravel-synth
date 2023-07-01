@@ -20,15 +20,15 @@ class Architect extends Module
         ];
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
-        $this->cmd->synth->loadSystemMessage('architect');
+        $this->synthController->synth->loadSystemMessage('architect');
         // $schema = include __DIR__ . "/../Prompts/architect.schema.php";
         $currentQuestion = 'What do you want to create?';
         $hasAnswered = false;
 
         while (true) {
-            $input = $this->cmd->ask($currentQuestion);
+            $input = $this->synthController->cmd->ask($currentQuestion);
 
             if ($input == 'exit') {
                 break;
@@ -36,17 +36,17 @@ class Architect extends Module
 
             if (! $input) {
                 if ($hasAnswered) {
-                    $this->getModule('Attachments')->addAttachmentFromMessage('architecture', $this->cmd->synth->ai->getLastMessage());
+                    $this->getModule('Attachments')->addAttachmentFromMessage('architecture', $this->synthController->synth->ai->getLastMessage());
                 }
 
                 break;
             }
 
-            $this->cmd->synth->chat($input);
+            $this->synthController->synth->chat($input);
             $hasAnswered = true;
 
-            $this->cmd->newLine();
-            $this->cmd->info("Press enter to accept and continue, type 'exit' to discard, or ask a follow up question.");
+            $this->synthController->cmd->newLine();
+            $this->synthController->cmd->info("Press enter to accept and continue, type 'exit' to discard, or ask a follow up question.");
             $currentQuestion = 'You';
         }
     }

@@ -2,15 +2,16 @@
 
 namespace Blinq\Synth\Modules;
 
-use Blinq\Synth\Commands\SynthCommand;
+use Blinq\Synth\Controllers\SynthController;
+use Blinq\Synth\Interfaces\ModuleInterface;
 
 /**
  * This file defines the base class for modules in the Synth application.
  * It provides common functionality for modules, such as registering, selecting, and accessing other modules.
  */
-abstract class Module
+abstract class Module implements ModuleInterface
 {
-    public function __construct(public SynthCommand $cmd)
+    public function __construct(public SynthController $synthController)
     {
 
     }
@@ -22,13 +23,13 @@ abstract class Module
         return [];
     }
 
-    public function onSelect(?string $key = null)
+    public function onSelect(?string $key = null): void
     {
 
     }
 
-    public function getModule($name)
+    public function getModule($name): ModuleInterface
     {
-        return $this->cmd->modules->get($name);
+        return $this->synthController->modules->get($name);
     }
 }
