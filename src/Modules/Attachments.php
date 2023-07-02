@@ -4,6 +4,7 @@ namespace Blinq\Synth\Modules;
 
 use Blinq\LLM\Entities\ChatMessage;
 use Blinq\Synth\Controllers\SynthController;
+use Illuminate\Support\Collection;
 
 /**
  * This file is a module in the Synth application, specifically for handling attachments.
@@ -12,6 +13,8 @@ use Blinq\Synth\Controllers\SynthController;
 final class Attachments extends Module
 {
     public const FILES_DELIMITER = '    => ';
+
+    public Collection $availableFiles;
 
     public function name(): string
     {
@@ -34,6 +37,8 @@ final class Attachments extends Module
 
     public function onSelect(?string $key = null): void
     {
+        $this->availableFiles = collect($this->search('*'));
+
         if ($key === 'attach') {
             $this->searchAndAttachFiles();
         }
@@ -81,28 +86,43 @@ final class Attachments extends Module
         while (true) {
             $hasWildcard = false;
 
-            $file = $this->synthController->cmd->askWithCompletion('Search', function ($x) use (&$hasWildcard) {
+            $file = $this->synthController->cmd->anticipate('Search', function ($search) use (&$hasWildcard) {
 
                 //Safety checks when clearing or viewing attachments
-                if ($x === 'view') {
+                if ($search === 'view') {
                     return ['view'];
                 }
 
-                if ($x === 'clear') {
+                if ($search === 'clear') {
                     return ['clear'];
                 }
 
-                if (! $x) {
+                if ($search === 'exit') {
+                    return ['exit'];
+                }
+
+                if (! $search) {
                     return [];
                 }
-                if (str($x)->contains('=>')) {
+                if (str($search)->contains('=>')) {
                     return [];
                 }
 
-                $hasWildcard = str($x)->contains('*');
-                $files = $this->search($x);
+                $hasWildcard = str($search)->contains('*');
 
-                return $files ?? [];
+                $filesMatched = $this->availableFiles->filter(function ($file) use ($search) {
+                    $pattern = str_replace('*', '.*', preg_quote($search, '/'));
+
+                    return preg_match('/.*'.$pattern.'.*/i', $file);
+                })->values();
+
+                if ($hasWildcard) {
+                    $file = $search.self::FILES_DELIMITER.$filesMatched->first().' | '.$filesMatched->count().' files found';
+                } else {
+                    $file = $search.self::FILES_DELIMITER.$filesMatched->first();
+                }
+
+                return [$file] ?? [];
             });
 
             if ($file === 'view') {
@@ -117,6 +137,7 @@ final class Attachments extends Module
             }
 
             if (! $hasWildcard) {
+                $file = (string) str($file)->afterLast(self::FILES_DELIMITER);
                 if (! $this->addAttachmentFromFile($file)) {
                     break;
                 }
@@ -169,13 +190,8 @@ final class Attachments extends Module
             // Make it relative to base_path
             $path = str_replace($base.'/', '', $path);
 
-            $files[] = $search.self::FILES_DELIMITER.$path;
+            $files[] = $path;
 
-            $count++;
-
-            if ($count >= $limit) {
-                break;
-            }
         }
 
         return $files;
