@@ -10,6 +10,7 @@ use Blinq\Synth\Modules\Attachments;
 use Blinq\Synth\Modules\Chat;
 use Blinq\Synth\Modules\Files;
 use Blinq\Synth\Modules\History;
+use Blinq\Synth\Modules\Make;
 use Blinq\Synth\Modules\Migrations;
 use Blinq\Synth\Modules\Models;
 use Blinq\Synth\Modules\Schema;
@@ -24,6 +25,7 @@ final class Modules
         Architect::class,
         Attachments::class,
         Chat::class,
+        Make::class,
         Files::class,
         History::class,
         Migrations::class,

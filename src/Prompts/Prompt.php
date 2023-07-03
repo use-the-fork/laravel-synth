@@ -4,26 +4,27 @@ namespace Blinq\Synth\Prompts;
 
 use Blinq\Synth\Exceptions\StubNotFoundException;
 use Blinq\Synth\Interfaces\PromptInterface;
+use Blinq\Synth\ValueObjects\ChatMessageValueObject;
 
 class Prompt implements PromptInterface
 {
     protected array $functions = [];
 
-    protected array $system = [];
+    protected ChatMessageValueObject $system;
 
-    protected array $user = [];
+    protected ChatMessageValueObject $user;
 
     public function getFunctions(): array
     {
         return $this->functions;
     }
 
-    public function getSystem(): array
+    public function getSystem(): ChatMessageValueObject
     {
         return $this->system;
     }
 
-    public function getUser(): array
+    public function getUser(): ChatMessageValueObject
     {
         return $this->user;
     }

@@ -2,6 +2,8 @@
 
 namespace Blinq\Synth\Prompts;
 
+use Blinq\Synth\ValueObjects\ChatMessageValueObject;
+
 class ChatPrompt extends Prompt
 {
     public function __construct()
@@ -46,6 +48,14 @@ class ChatPrompt extends Prompt
 
     protected function loadSystem(): void
     {
-        $this->system = ['role' => 'system', 'content' => 'You are a laravel architect inside an existing laravel application. Find out what the user wants to create and help them create it. If you are creating or updating a file use the save_files function (with FULL filename from the base_path).'];
+        $instructions = implode("\n", [
+            'You are a laravel architect inside an existing laravel application.',
+            'Instructions:',
+            ' * Find out what the user wants to create and help them create it.',
+            ' * If you are creating or updating a file use the save_files function (with FULL filename from the base_path)',
+            ' * Do NOT truncate code',
+        ]);
+
+        $this->system = ChatMessageValueObject::make('system', $instructions);
     }
 }

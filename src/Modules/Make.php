@@ -8,24 +8,24 @@ use Blinq\Synth\Prompts\ChatPrompt;
  * This file is a module in the Synth application, specifically for handling chat interactions.
  * It provides functionality to chat with GPT and create/update files using the chat interface.
  */
-class Chat extends Module
+class Make extends Module
 {
     public function name(): string
     {
-        return 'Chat';
+        return 'Make';
     }
 
     public function register(): array
     {
         return [
-            'chat' => 'Chat with GPT',
+            'make' => 'Create or update any file by asking',
         ];
     }
 
     public function onSelect(?string $key = null): void
     {
 
-        $currentQuestion = 'How can I help you?';
+        $currentQuestion = 'What should I make?';
 
         $this->synthController->setPromptInterface(new ChatPrompt());
 

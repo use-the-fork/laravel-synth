@@ -1,0 +1,8 @@
+{\n
+"files": [\n
+{\n
+"name": "app/Domains/Email/Http/Controllers/Api/EmailController.php",\n
+"contents": "<?php\n\nnamespace App\Domains\Email\Http\Controllers\Api;\n\nuse App\Domains\ChangeLog\Enums\SubTypeEnum;\nuse App\Domains\ChangeLog\Enums\TypeEnum;\nuse App\Domains\ChangeLog\Models\ChangeLog;\nuse App\Domains\Employee\Models\Employee;\nuse App\Http\Controllers\ApiController;\nuse Illuminate\Http\Request;\nuse Illuminate\Mail\Message;\nuse Illuminate\Support\Facades\Mail;\n\nclass EmailController extends ApiController\n{\n    public function index($folder = 'inbox')\n    {\n        $client = \\Webklex\\IMAP\\Facades\\Client::account('default');\n\n        // Connect to the IMAP Server\n        $client->connect();\n\n        // Get the folder\n        $folder = $this->getFolder($folder, $client);\n\n        // Get all messages\n        $messages = $this->getMessages($folder);\n\n        return $this->okResponse('ok', $messages);\n    }\n\n    public function show(Employee $employee)\n    {\n    }\n\n    // Rest of the code removed for brevity\n}\n"\n
+}\n
+]\n
+}

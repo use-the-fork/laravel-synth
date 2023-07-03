@@ -19,6 +19,8 @@
         "php": "^8.1",
         "ext-pcntl": "*",
         "blinq/openai": "^1.0.3",
+        "guzzlehttp/guzzle": "^7.7",
+        "nunomaduro/termwind": "^1.15",
         "openai-php/client": "^0.6.2",
         "scrivo/highlight.php": "v9.18.1.10",
         "spatie/ignition": "^1.9",

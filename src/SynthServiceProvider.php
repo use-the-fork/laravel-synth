@@ -35,9 +35,11 @@ class SynthServiceProvider extends PackageServiceProvider
         $this->app->singleton(
             abstract: SynthController::class,
             concrete: fn () => new SynthController(
-                synth: new Synth(),
                 mainMenu: new MainMenu(),
                 modules: new Modules(),
+                functions: [
+                    'save_files' => new Functions\SaveFilesFunction(),
+                ],
             ),
         );
     }
