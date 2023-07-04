@@ -12,6 +12,7 @@ class AttachedFileValueObject implements Arrayable
     public function __construct(
         public string $file,
         public string $content,
+        public bool $modified = false,
     ) {
     }
 
@@ -23,6 +24,11 @@ class AttachedFileValueObject implements Arrayable
     public function getContent(): string
     {
         return $this->content;
+    }
+
+    public function isModified(): bool
+    {
+        return $this->modified;
     }
 
     public function getFormatted(): string
@@ -81,9 +87,9 @@ class AttachedFileValueObject implements Arrayable
 
     }
 
-    public static function make(string $file, string $content): self
+    public static function make(string $file, string $content, bool $modified): self
     {
-        return new self($file, $content);
+        return new self($file, $content, $modified);
     }
 
     public function toArray(): array
@@ -91,6 +97,7 @@ class AttachedFileValueObject implements Arrayable
         return [
             'file' => $this->file,
             'content' => $this->content,
+            'is_modified' => $this->modified,
         ];
     }
 }

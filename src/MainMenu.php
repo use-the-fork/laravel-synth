@@ -55,8 +55,8 @@ class MainMenu
         ];
 
         while (true) {
-            $this->dispatch('show');
 
+            $synthController->getSessionInformation();
             $option = $this->synthController->cmd->choice('What do you want to do?', $options);
             $synthController->modules->select($option);
 

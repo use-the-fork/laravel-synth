@@ -39,6 +39,8 @@ class SynthServiceProvider extends PackageServiceProvider
                 modules: new Modules(),
                 functions: [
                     'save_files' => new Functions\SaveFilesFunction(),
+                    'need_documentation' => new Functions\NeedClassFunction(),
+                    'need_class' => new Functions\NeedDocumentationFunction(),
                 ],
             ),
         );

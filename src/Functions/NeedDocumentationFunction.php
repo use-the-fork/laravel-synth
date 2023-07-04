@@ -6,16 +6,16 @@ use Blinq\Synth\Exceptions\MissingFunctionParametersException;
 use Blinq\Synth\Interfaces\FunctionInterface;
 use Blinq\Synth\ValueObjects\AttachedFileValueObject;
 
-class SaveFilesFunction extends BaseFunction implements FunctionInterface
+class NeedDocumentationFunction extends BaseFunction implements FunctionInterface
 {
     public function getName(): string
     {
-        return 'save_files';
+        return 'need_documentation';
     }
 
     public function getDescription(): string
     {
-        return 'Save the files in laravel. Use this method any time you create or update files.';
+        return 'Asks the user for additional information about a third party class or method. Being implemented in the laravel application.';
     }
 
     public function getFunctionJson(): array
@@ -27,27 +27,12 @@ class SaveFilesFunction extends BaseFunction implements FunctionInterface
                 'parameters' => [
                     'type' => 'object',
                     'properties' => [
-                        'files' => [
-                            'type' => 'array',
-                            'items' => [
-                                'type' => 'object',
-                                'required' => [
-                                    'name',
-                                    'contents',
-                                ],
-                                'properties' => [
-                                    'name' => [
-                                        'type' => 'string',
-                                        'description' => 'The full path/filename of the file, starting from the laravel base path. Ex: app/Models/Note.php',
-                                    ],
-                                    'contents' => [
-                                        'type' => 'string',
-                                        'description' => 'The WHOLE contents of the file. With nothing truncated.',
-                                    ],
-                                ],
-                            ],
+                        'detail_for' => [
+                            'type' => 'string',
+                            'description' => 'The name of the class or method that needs documentation. Ex: OpenAI::client($yourApiKey);',
                         ],
                     ],
+                    'required' => ['detail_for'],
                 ],
             ];
     }

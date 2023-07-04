@@ -6,16 +6,16 @@ use Blinq\Synth\Exceptions\MissingFunctionParametersException;
 use Blinq\Synth\Interfaces\FunctionInterface;
 use Blinq\Synth\ValueObjects\AttachedFileValueObject;
 
-class SaveFilesFunction extends BaseFunction implements FunctionInterface
+class NeedClassFunction extends BaseFunction implements FunctionInterface
 {
     public function getName(): string
     {
-        return 'save_files';
+        return 'need_class';
     }
 
     public function getDescription(): string
     {
-        return 'Save the files in laravel. Use this method any time you create or update files.';
+        return 'Retrives the code of the specified classes.';
     }
 
     public function getFunctionJson(): array
@@ -36,13 +36,9 @@ class SaveFilesFunction extends BaseFunction implements FunctionInterface
                                     'contents',
                                 ],
                                 'properties' => [
-                                    'name' => [
+                                    'class' => [
                                         'type' => 'string',
-                                        'description' => 'The full path/filename of the file, starting from the laravel base path. Ex: app/Models/Note.php',
-                                    ],
-                                    'contents' => [
-                                        'type' => 'string',
-                                        'description' => 'The WHOLE contents of the file. With nothing truncated.',
+                                        'description' => 'The full class of the file. Ex: app/Models/Note',
                                     ],
                                 ],
                             ],

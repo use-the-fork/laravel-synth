@@ -7,13 +7,12 @@ use Blinq\Synth\Exceptions\NotAModuleInterfaceException;
 use Blinq\Synth\Interfaces\ModuleInterface;
 use Blinq\Synth\Modules\Architect;
 use Blinq\Synth\Modules\Attachments;
-use Blinq\Synth\Modules\Chat;
 use Blinq\Synth\Modules\Files;
 use Blinq\Synth\Modules\History;
-use Blinq\Synth\Modules\Make;
 use Blinq\Synth\Modules\Migrations;
 use Blinq\Synth\Modules\Models;
 use Blinq\Synth\Modules\Schema;
+use Blinq\Synth\Modules\StartSession;
 
 /**
  * This file is responsible for managing the modules in the Synth application.
@@ -24,8 +23,7 @@ final class Modules
     public static array $moduleInstances = [
         Architect::class,
         Attachments::class,
-        Chat::class,
-        Make::class,
+        StartSession::class,
         Files::class,
         History::class,
         Migrations::class,

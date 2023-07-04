@@ -29,12 +29,14 @@ class TokenService
             return [
                 'model' => self::LARGE_MODEL,
                 'estimatedCount' => $estimatedCount,
+                'percent_used' => round($estimatedCount / 8000 * 100, 2),
             ];
         }
 
         return [
             'model' => self::SMALL_MODEL,
             'estimatedCount' => $estimatedCount,
+            'percent_used' => round($estimatedCount / 16000 * 100, 2),
         ];
     }
 }
