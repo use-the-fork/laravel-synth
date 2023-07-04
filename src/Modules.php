@@ -7,6 +7,7 @@ use Blinq\Synth\Exceptions\NotAModuleInterfaceException;
 use Blinq\Synth\Interfaces\ModuleInterface;
 use Blinq\Synth\Modules\Architect;
 use Blinq\Synth\Modules\Attachments;
+use Blinq\Synth\Modules\Extra;
 use Blinq\Synth\Modules\Files;
 use Blinq\Synth\Modules\History;
 use Blinq\Synth\Modules\Migrations;
@@ -23,6 +24,7 @@ final class Modules
     public static array $moduleInstances = [
         Architect::class,
         Attachments::class,
+        Extra::class,
         StartSession::class,
         Files::class,
         History::class,

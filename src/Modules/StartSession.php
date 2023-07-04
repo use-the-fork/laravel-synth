@@ -24,7 +24,7 @@ class StartSession extends Module
 
     public function onSelect(?string $key = null): void
     {
-        $currentQuestion = 'What should I make?';
+        $currentQuestion = 'How can I help?';
         $this->synthController->setPromptInterface(new StartSessionPrompt());
         $this->synthController->chat($currentQuestion);
     }

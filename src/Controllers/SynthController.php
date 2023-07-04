@@ -10,6 +10,7 @@ use Blinq\Synth\MainMenu;
 use Blinq\Synth\Modules;
 use Blinq\Synth\ValueObjects\AttachedFileValueObject;
 use Blinq\Synth\ValueObjects\ChatMessageValueObject;
+use Blinq\Synth\ValueObjects\ExtraValueObject;
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Support\Arr;
 use OpenAI;
@@ -39,6 +40,7 @@ class SynthController
         public array $functions = [],
         public array $chatHistory = [],
         public array $attachedFiles = [],
+        public array $attachedExtras = [],
     ) {
 
         if (! config('synth.openai_key')) {
@@ -134,10 +136,10 @@ class SynthController
 
         $this->messageToSend = [];
 
-        $this->messageToSend[] = ChatMessageValueObject::make($this->systemMessage->getRole(), $this->addGlobalInstructions($this->systemMessage->getContent()));
+        $this->messageToSend[] = ChatMessageValueObject::make($this->systemMessage->getRole(), $this->systemMessage->getContent());
 
         if (! empty($this->attachedFiles)) {
-            $filesToSend = "Here are the files I will be referencing:\n\"\"\"\n";
+            $filesToSend = "# Anythings Below This Line Is what we have currently built. Seperated by \"\"\"\n\n";
             foreach ($this->attachedFiles as $file) {
                 $filesToSend .= $file->getContent().'"""'."\n";
             }
@@ -294,5 +296,32 @@ class SynthController
     public function setAttachedFiles($attachedFiles = []): array
     {
         return $this->attachedFiles = $attachedFiles;
+    }
+
+    //commands specific to adding and removing attachments
+
+    public function getExtras(): array
+    {
+        return $this->attachedExtras;
+    }
+
+    public function addExtra($key, $value): void
+    {
+        $this->cmd->comment("Attaching {$key}");
+        $this->attachedFiles[] = ExtraValueObject::make($key, $value);
+    }
+
+    public function removeExtra($key): void
+    {
+        $this->cmd->comment("Removed {$key}");
+        unset($this->attachedFiles[$key]);
+    }
+
+    public function clearExtra(): void
+    {
+        $this->attachedFiles = [];
+
+        $this->cmd->comment('Attachments cleared');
+        $this->cmd->newLine();
     }
 }
