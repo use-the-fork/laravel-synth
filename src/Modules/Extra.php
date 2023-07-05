@@ -39,30 +39,22 @@ final class Extra extends Module
     }
 
     /**
-     * Remove the <style> tag from the provided code while keeping the inside text.
+     * Remove formatting tags from the provided code while keeping the inner text.
      *
      * @param  string  $code The code to process.
      * @return string The processed code.
      */
-    public function removeStyleTag($code)
+    public function removeFormatting($code)
     {
-        // Find the opening and closing <style> tags.
-        $startTag = '<style>';
-        $endTag = '</style>';
+        // Remove span and div tags from the string using regular expressions
+        $modifiedString = preg_replace('/<(span|div)\b[^>]*>(.*?)<\/\1>/s', '', $code);
+        // Remove tabs from the modified string
+        $modifiedString = str_replace("\t", '', $modifiedString);
+        // Remove extra whitespace from the modified string
+        $modifiedString = preg_replace('/\s+/', ' ', $modifiedString);
 
-        // Find the positions of the opening and closing tags.
-        $startPos = strpos($code, $startTag);
-        $endPos = strpos($code, $endTag);
-
-        // If both tags are found, remove the <style> tag and its contents.
-        if ($startPos !== false && $endPos !== false) {
-            $startPos += strlen($startTag);
-
-            return substr_replace($code, '', $startPos, $endPos - $startPos);
-        }
-
-        // If the <style> tag is not found, return the original code.
-        return $code;
+        // Return the modified string
+        return $modifiedString;
     }
 
     public function searchAndAttachFiles(): void
@@ -79,12 +71,12 @@ final class Extra extends Module
 
             $url = $this->synthController->cmd->ask('Enter a URL to Scrape:');
             $urlContent = file_get_contents($url);
-            $markdown = $converter->convert($urlContent);
-
-            dd($markdown);
-
+            $markdown = $this->removeFormatting($converter->convert($urlContent));
             $confirm = $this->synthController->cmd->confirm('This would use '.TokenService::estimateTokenCount([ChatMessageValueObject::make('user', $markdown)]).' tokens. Would you like to strip down some of the information?', false);
 
+            if (! $confirm) {
+                $this->synthController->cmd->info('stripping information via GPT');
+            }
             dd($markdown);
 
             $file = $this->synthController->cmd->anticipate('Search', function ($search) use (&$hasWildcard) {

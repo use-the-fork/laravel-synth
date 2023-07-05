@@ -139,7 +139,7 @@ class SynthController
         $this->messageToSend[] = ChatMessageValueObject::make($this->systemMessage->getRole(), $this->systemMessage->getContent());
 
         if (! empty($this->attachedFiles)) {
-            $filesToSend = "# Anythings Below This Line Is what we have currently built. Seperated by \"\"\"\n\n";
+            $filesToSend = "# Anythings below this line is what we have currently built. Files are seperated by \"\"\"\n\n";
             foreach ($this->attachedFiles as $file) {
                 $filesToSend .= $file->getContent().'"""'."\n";
             }
