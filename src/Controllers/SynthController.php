@@ -312,7 +312,7 @@ class SynthController
         $this->currentMessageToSend = $this->messageToSend;
 
         $this->currentMessageToSend[] = ChatMessageValueObject::make('assistant', (string) $this->finalResponse['content']);
-        $this->currentMessageToSend[] = ChatMessageValueObject::make('user', "Instructions:\n *Make the changes using the save_files function.\n *Respond only with the function call.\n * respond with the WHOLE file. \n *Do not truncate any code.");
+        $this->currentMessageToSend[] = ChatMessageValueObject::make('user', "Instructions:\n1. Make the changes as discussed above using the save_files function.\n 2.Respond only with the function call.\n 3. respond with the WHOLE file. \n 4. Do not truncate any code.");
     }
 
     private function executeFunctionCall(): void

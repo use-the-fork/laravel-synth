@@ -29,7 +29,6 @@ abstract class Module implements ModuleInterface
     {
         $menu->close();
         $this->onSelect($menu);
-        $menu->open();
     }
 
     public function getModule($name): ModuleInterface
