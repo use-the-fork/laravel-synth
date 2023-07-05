@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth;
 
 use Blinq\Synth\Controllers\SynthController;
@@ -7,12 +9,7 @@ use Blinq\Synth\Exceptions\NotAModuleInterfaceException;
 use Blinq\Synth\Interfaces\ModuleInterface;
 use Blinq\Synth\Modules\Architect;
 use Blinq\Synth\Modules\Attachments;
-use Blinq\Synth\Modules\Extra;
 use Blinq\Synth\Modules\Files;
-use Blinq\Synth\Modules\History;
-use Blinq\Synth\Modules\Migrations;
-use Blinq\Synth\Modules\Models;
-use Blinq\Synth\Modules\Schema;
 use Blinq\Synth\Modules\StartSession;
 
 /**
@@ -24,20 +21,20 @@ final class Modules
     public static array $moduleInstances = [
         Architect::class,
         Attachments::class,
-        Extra::class,
+        //Extra::class,
         StartSession::class,
         Files::class,
-        History::class,
-        Migrations::class,
-        Models::class,
-        Schema::class,
+        //        History::class,
+        //        Migrations::class,
+        //        Models::class,
+        //        Schema::class,
     ];
 
     protected array $modules = [];
 
     protected SynthController $synthController;
 
-    public function setSynthController()
+    public function setSynthController(): void
     {
         $this->synthController = app(SynthController::class);
     }
@@ -68,9 +65,8 @@ final class Modules
     public function registerModule(ModuleInterface $module): void
     {
         $this->modules[$module->name()] = [
-            'name' => $module->name(),
+            'name' => $module->register(),
             'module' => $module,
-            'options' => $module->register(),
         ];
     }
 
@@ -87,9 +83,7 @@ final class Modules
      */
     public function getOptions(): array
     {
-        return collect($this->modules)->flatMap(function ($module) {
-            return $module['options'];
-        })->toArray();
+        return $this->modules;
     }
 
     /**

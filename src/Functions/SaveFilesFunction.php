@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Functions;
 
 use Blinq\Synth\Exceptions\MissingFunctionParametersException;
@@ -38,7 +40,7 @@ class SaveFilesFunction extends BaseFunction implements FunctionInterface
                                 'properties' => [
                                     'name' => [
                                         'type' => 'string',
-                                        'description' => 'The full path/filename of the file, starting from the laravel base path. Ex: app/Models/Note.php',
+                                        'description' => 'The FULL path/filename of the file, starting from the laravel base path. Ex: app/Models/Note.php',
                                     ],
                                     'contents' => [
                                         'type' => 'string',
@@ -61,19 +63,18 @@ class SaveFilesFunction extends BaseFunction implements FunctionInterface
             throw MissingFunctionParametersException::make($this::class);
         }
 
-        $chatContent = [];
         foreach ($jsonString['files'] as $file) {
             $name = $file['name'] ?? null;
             $contents = $file['contents'] ?? null;
 
-            if (! $name && ! $contents) {
+            if ( ! $name && ! $contents) {
                 continue;
             }
 
             // Normalize the file
             // Check if it has <?php at the start (add it)
             if (str($name)->endsWith('php') && ! str($contents)->startsWith('<?php')) {
-                $contents = "<?php\n".$contents;
+                $contents = "<?php\n" . $contents;
             }
 
             if (str($name)->contains('blade.php')) {

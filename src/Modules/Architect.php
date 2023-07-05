@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
+
+use PhpSchool\CliMenu\CliMenu;
 
 /**
  * This file is a module in the Synth application, specifically for handling application architecture.
@@ -13,28 +17,25 @@ class Architect extends Module
         return 'Architect';
     }
 
-    public function register(): array
+    public function register(): string
     {
-        return [
-            'architect' => 'Brainstorm with GPT to generate a new application architecture.',
-        ];
+        return '[A]rchitect: Brainstorm with GPT to generate a new application architecture.';
     }
 
-    public function onSelect(?string $key = null): void
+    public function onSelect(CliMenu $menu): void
     {
         $this->synthController->synth->loadSystemMessage('architect');
-        // $schema = include __DIR__ . "/../Prompts/architect.schema.php";
         $currentQuestion = 'What do you want to create?';
         $hasAnswered = false;
 
         while (true) {
             $input = $this->synthController->cmd->ask($currentQuestion);
 
-            if ($input == 'exit') {
+            if ('exit' == $input) {
                 break;
             }
 
-            if (! $input) {
+            if ( ! $input) {
                 if ($hasAnswered) {
                     $this->getModule('Attachments')->addAttachmentFromMessage('architecture', $this->synthController->synth->ai->getLastMessage());
                 }

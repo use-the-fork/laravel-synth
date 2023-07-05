@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
 use Blinq\Synth\Prompts\StartSessionPrompt;
+use PhpSchool\CliMenu\CliMenu;
 
 /**
  * This file is a module in the Synth application, specifically for handling chat interactions.
@@ -15,14 +18,12 @@ class StartSession extends Module
         return 'Chat Session';
     }
 
-    public function register(): array
+    public function register(): string
     {
-        return [
-            'chat' => 'Start a new chat session.',
-        ];
+        return '[Ch]at: Start a new chat session.';
     }
 
-    public function onSelect(?string $key = null): void
+    public function onSelect(CliMenu $menu): void
     {
         $currentQuestion = 'How can I help?';
         $this->synthController->setPromptInterface(new StartSessionPrompt());

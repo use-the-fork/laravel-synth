@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
 use Blinq\Synth\Controllers\SynthController;
 use Blinq\Synth\Interfaces\ModuleInterface;
+use PhpSchool\CliMenu\CliMenu;
 
 /**
  * This file defines the base class for modules in the Synth application.
@@ -18,14 +21,15 @@ abstract class Module implements ModuleInterface
 
     abstract public function name(): string;
 
-    public function register(): array
-    {
-        return [];
-    }
+    abstract public function register(): string;
 
-    public function onSelect(?string $key = null): void
-    {
+    abstract public function onSelect(CliMenu $menu): void;
 
+    public function doCallback(CliMenu $menu): void
+    {
+        $menu->close();
+        $this->onSelect($menu);
+        $menu->open();
     }
 
     public function getModule($name): ModuleInterface

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
-use Blinq\Synth\Controllers\SynthController;
-use Blinq\Synth\Helpers\TokenService;
+use Blinq\Synth\Helpers\ChatTokenService;
 use Blinq\Synth\ValueObjects\ChatMessageValueObject;
 use Illuminate\Support\Collection;
 use League\HTMLToMarkdown\HtmlConverter;
+use PhpSchool\CliMenu\CliMenu;
 
 /**
  * This file is a module in the Synth application, specifically for handling attachments.
@@ -23,17 +25,12 @@ final class Extra extends Module
         return 'Extras';
     }
 
-    public function register(): array
+    public function register(): string
     {
-
-        $synthController = app(SynthController::class);
-
-        return [
-            'extra' => 'Attach documentation that the AI may need.',
-        ];
+        return 'Extra: Attach documentation that the AI may need.';
     }
 
-    public function onSelect(?string $key = null): void
+    public function onSelect(CliMenu $menu): void
     {
         $this->searchAndAttachFiles();
     }
@@ -47,11 +44,13 @@ final class Extra extends Module
     public function removeFormatting($code)
     {
         // Remove span and div tags from the string using regular expressions
-        $modifiedString = preg_replace('/<(span|div)\b[^>]*>(.*?)<\/\1>/s', '', $code);
+        //$modifiedString = preg_replace('/<(span|div)\b[^>]*>(.*?)<\/\1>/s', '', $code);
+        $modifiedString = preg_replace('/<(span|div|a|img|)\b[^>]*>/', '', $code);
+        $modifiedString = preg_replace('/<\/(span|div|a|img|)>/', '', $modifiedString);
+
         // Remove tabs from the modified string
         $modifiedString = str_replace("\t", '', $modifiedString);
         // Remove extra whitespace from the modified string
-        $modifiedString = preg_replace('/\s+/', ' ', $modifiedString);
 
         // Return the modified string
         return $modifiedString;
@@ -65,36 +64,62 @@ final class Extra extends Module
         $this->synthController->cmd->line('view   - to view the current attachments');
         $this->synthController->cmd->line('clear  - to clear the current attachments');
 
-        $converter = new HtmlConverter(['strip_tags' => true]);
+        $converter = new HtmlConverter([
+            'strip_tags' => true,
+            'hard_break' => true,
+            'preserve_comments' => true,
+        ]);
 
         while (true) {
 
             $url = $this->synthController->cmd->ask('Enter a URL to Scrape:');
             $urlContent = file_get_contents($url);
-            $markdown = $this->removeFormatting($converter->convert($urlContent));
-            $confirm = $this->synthController->cmd->confirm('This would use '.TokenService::estimateTokenCount([ChatMessageValueObject::make('user', $markdown)]).' tokens. Would you like to strip down some of the information?', false);
+            $markdown = $converter->convert($this->removeFormatting($urlContent));
 
-            if (! $confirm) {
-                $this->synthController->cmd->info('stripping information via GPT');
+            $this->synthController->cmd->info('Stripping information via GPT');
+
+            $command = [
+                'You are a developer working on documentation.',
+                'Instructions:',
+                ' - 1: analyze the text (Figure 1) and remove any information that is not needed.',
+                ' - 2: condense the text as much as possible. It is okay if grammar is not perfect as long as you understand what is being said.',
+                ' - 3: Respond with ONLY the documentation that is needed. If there is no useful documentation then respond with ""',
+                'Anything below this line is the documentation that needs to be condensed.--- (Figure 1)',
+            ];
+
+            //split the markdown into 2000 word chunks
+
+            $toStore = [];
+            foreach ($this->splitMarkdownIntoChunks($markdown) as $section) {
+                $messages = [];
+                $messages[] = ChatMessageValueObject::make('user', implode("\n", [...$command, $section]));
+                $modal = ChatTokenService::getModalToUse($messages);
+                $optimized = $this->synthController->openaiClient->chat()->create([
+                    'model' => $modal['model'],
+                    'messages' => $messages,
+                ])->toArray();
+
+                $toStore[] = $optimized['choices'][0]['message']['content'];
             }
-            dd($markdown);
+
+            dd($toStore);
 
             $file = $this->synthController->cmd->anticipate('Search', function ($search) use (&$hasWildcard) {
 
                 //Safety checks when clearing or viewing attachments
-                if ($search === 'view') {
+                if ('view' === $search) {
                     return ['view'];
                 }
 
-                if ($search === 'clear') {
+                if ('clear' === $search) {
                     return ['clear'];
                 }
 
-                if ($search === 'exit') {
+                if ('exit' === $search) {
                     return ['exit'];
                 }
 
-                if (! $search) {
+                if ( ! $search) {
                     return [];
                 }
                 if (str($search)->contains('=>')) {
@@ -106,32 +131,32 @@ final class Extra extends Module
                 $filesMatched = $this->availableFiles->filter(function ($file) use ($search) {
                     $pattern = str_replace('*', '.*', preg_quote($search, '/'));
 
-                    return preg_match('/.*'.$pattern.'.*/i', $file);
+                    return preg_match('/.*' . $pattern . '.*/i', $file);
                 })->values();
 
                 if ($hasWildcard) {
-                    $file = $search.self::FILES_DELIMITER.$filesMatched->first().' | '.$filesMatched->count().' files found';
+                    $file = $search . self::FILES_DELIMITER . $filesMatched->first() . ' | ' . $filesMatched->count() . ' files found';
                 } else {
-                    $file = $search.self::FILES_DELIMITER.$filesMatched->first();
+                    $file = $search . self::FILES_DELIMITER . $filesMatched->first();
                 }
 
                 return [$file] ?? [];
             });
 
-            if ($file === 'view') {
+            if ('view' === $file) {
                 $this->viewAttachments();
 
                 continue;
             }
-            if ($file === 'clear') {
+            if ('clear' === $file) {
                 $this->synthController->clearAttachedFiles();
 
                 continue;
             }
 
-            if (! $hasWildcard) {
+            if ( ! $hasWildcard) {
                 $file = (string) str($file)->afterLast(self::FILES_DELIMITER);
-                if (! $this->addAttachmentFromFile($file)) {
+                if ( ! $this->addAttachmentFromFile($file)) {
                     break;
                 }
             } else {
@@ -139,12 +164,12 @@ final class Extra extends Module
                 $files = $this->search($query);
 
                 $addFilesChoice = $this->synthController->cmd->choice(
-                    'Found '.count($files).' files',
+                    'Found ' . count($files) . ' files',
                     ['all' => 'Add All Files', 'choose' => 'Choose which files to add'],
                     'all'
                 );
 
-                if ($addFilesChoice == 'choose') {
+                if ('choose' == $addFilesChoice) {
                     foreach ($files as $count => $file) {
 
                         $fileCount = $count + 1;
@@ -162,5 +187,41 @@ final class Extra extends Module
             }
 
         }
+    }
+
+    /**
+     * Splits the given Markdown content into sections no larger than 3000 words each.
+     *
+     * @param  string  $markdown The Markdown content to be split.
+     * @return array An array of sections.
+     */
+    public function splitMarkdownIntoChunks($markdown)
+    {
+        // Split the Markdown into individual words
+        $words = preg_split('/\s+/', $markdown);
+
+        $chunks = [];
+        $currentChunk = '';
+
+        foreach ($words as $word) {
+            // Append the current word to the current chunk
+            $currentChunk .= $word . ' ';
+
+            // Check if the current chunk has reached the word limit
+            if (str_word_count($currentChunk) >= 3000) {
+                // Add the current chunk to the list of chunks
+                $chunks[] = trim($currentChunk);
+
+                // Reset the current chunk
+                $currentChunk = '';
+            }
+        }
+
+        // Add the remaining chunk if it's not empty
+        if ( ! empty($currentChunk)) {
+            $chunks[] = trim($currentChunk);
+        }
+
+        return $chunks;
     }
 }

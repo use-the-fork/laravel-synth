@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
 use Blinq\LLM\Entities\ChatMessage;
-use Blinq\Synth\Controllers\SynthController;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use PhpSchool\CliMenu\CliMenu;
+use function Termwind\render;
+use Throwable;
 
 /**
  * This file is a module in the Synth application, specifically for handling attachments.
@@ -21,43 +26,34 @@ final class Attachments extends Module
         return 'Attachments';
     }
 
-    public function register(): array
+    public function register(): string
     {
-
-        $synthController = app(SynthController::class);
-
-        $synthController->mainMenu->on('show', function () {
-            $this->notice();
-        });
-
-        return [
-            'attach' => 'Attach one or more files to this conversation.',
-        ];
+        return 'Attach: Attach one or more files to this conversation.';
     }
 
-    public function onSelect(?string $key = null): void
+    public function onSelect(CliMenu $menu): void
     {
-        $this->availableFiles = collect($this->search('*'));
 
-        if ($key === 'attach') {
-            $this->searchAndAttachFiles();
-        }
-        if ($key === 'attach:view') {
-            $this->viewAttachments();
-        }
+        $this->availableFiles = collect($this->search());
+        $this->searchAndAttachFiles();
+        $menu->open();
     }
 
     public function viewAttachments(): void
     {
 
-        foreach ($this->synthController->getAttachedFiles() as $key => $x) {
-            $this->synthController->cmd->comment($key);
-            $this->synthController->cmd->comment('----');
-            $this->synthController->cmd->getOutput()->writeln($x->getFormatted());
-            $this->synthController->cmd->newLine();
+        foreach ($this->synthController->getAttachedFiles() as $file) {
+            render("
+                <div>
+                    <div class='px-1 bg-green-600'>{$file->getFile()}</div>
+                    <code>
+                        {$file->getFormatted()}
+                    </code>
+                </div>
+            ");
         }
 
-        if (count($this->synthController->getAttachedFiles()) === 0) {
+        if (0 === count($this->synthController->getAttachedFiles())) {
             $this->synthController->cmd->comment('No attachments');
         }
 
@@ -68,8 +64,8 @@ final class Attachments extends Module
     {
         if (count($this->synthController->getAttachedFiles()) > 0) {
             $count = count($this->synthController->getAttachedFiles());
-            $this->synthController->cmd->info("You have $count attachments:");
-            echo collect($this->synthController->getAttachedFiles())->keys()->map(fn ($x) => '- '.basename($x))->implode(PHP_EOL);
+            $this->synthController->cmd->info("You have {$count} attachments:");
+            echo collect($this->synthController->getAttachedFiles())->keys()->map(fn ($x) => '- ' . basename($x))->implode(PHP_EOL);
             $this->synthController->cmd->newLine(2);
         }
     }
@@ -89,19 +85,19 @@ final class Attachments extends Module
             $file = $this->synthController->cmd->anticipate('Search', function ($search) use (&$hasWildcard) {
 
                 //Safety checks when clearing or viewing attachments
-                if ($search === 'view') {
+                if ('view' === $search) {
                     return ['view'];
                 }
 
-                if ($search === 'clear') {
+                if ('clear' === $search) {
                     return ['clear'];
                 }
 
-                if ($search === 'exit') {
+                if ('exit' === $search) {
                     return ['exit'];
                 }
 
-                if (! $search) {
+                if ( ! $search) {
                     return [];
                 }
                 if (str($search)->contains('=>')) {
@@ -113,32 +109,32 @@ final class Attachments extends Module
                 $filesMatched = $this->availableFiles->filter(function ($file) use ($search) {
                     $pattern = str_replace('*', '.*', preg_quote($search, '/'));
 
-                    return preg_match('/.*'.$pattern.'.*/i', $file);
+                    return preg_match('/.*' . $pattern . '.*/i', $file);
                 })->values();
 
                 if ($hasWildcard) {
-                    $file = $search.self::FILES_DELIMITER.$filesMatched->first().' | '.$filesMatched->count().' files found';
+                    $file = $search . self::FILES_DELIMITER . $filesMatched->first() . ' | ' . $filesMatched->count() . ' files found';
                 } else {
-                    $file = $search.self::FILES_DELIMITER.$filesMatched->first();
+                    $file = $search . self::FILES_DELIMITER . $filesMatched->first();
                 }
 
                 return [$file] ?? [];
             });
 
-            if ($file === 'view') {
+            if ('view' === $file) {
                 $this->viewAttachments();
 
                 continue;
             }
-            if ($file === 'clear') {
+            if ('clear' === $file) {
                 $this->synthController->clearAttachedFiles();
 
                 continue;
             }
 
-            if (! $hasWildcard) {
+            if ( ! $hasWildcard) {
                 $file = (string) str($file)->afterLast(self::FILES_DELIMITER);
-                if (! $this->addAttachmentFromFile($file)) {
+                if ( ! $this->addAttachmentFromFile($file)) {
                     break;
                 }
             } else {
@@ -146,12 +142,12 @@ final class Attachments extends Module
                 $files = $this->search($query);
 
                 $addFilesChoice = $this->synthController->cmd->choice(
-                    'Found '.count($files).' files',
+                    'Found ' . count($files) . ' files',
                     ['all' => 'Add All Files', 'choose' => 'Choose which files to add'],
                     'all'
                 );
 
-                if ($addFilesChoice == 'choose') {
+                if ('choose' == $addFilesChoice) {
                     foreach ($files as $count => $file) {
 
                         $fileCount = $count + 1;
@@ -171,30 +167,12 @@ final class Attachments extends Module
         }
     }
 
-    public function search($search): array
+    public function search(): array
     {
-        $files = [];
-        $limit = config('synth.search_limit', 10);
         $base = config('synth.file_base', base_path());
-        $excludePattern = config('synth.search_exclude_pattern', '/vendor|storage|node_modules|build|.git|.env/i');
-        $count = 0;
+        $excludePattern = config('synth.search_exclude_pattern', ['/vendor', '/storage', '/node_modules', '/build', '.git', '.env']);
 
-        /**
-         * @var \SplFileInfo $file
-         */
-        foreach (files_in($base, $search, excludePattern: $excludePattern) as $file) {
-            if ($file->isDir()) {
-                continue;
-            }
-            $path = $file->getRealPath();
-            // Make it relative to base_path
-            $path = str_replace($base.'/', '', $path);
-
-            $files[] = $path;
-
-        }
-
-        return $files;
+        return collect(glob("{$base}/{,*/,*/*/,*/*/*/,*/*/*/*/,*/*/*/*/*/,*/*/*/*/*/*/,*/*/*/*/*/*/*/,*/*/*/*/*/*/*/*/*/*/}*.*", GLOB_BRACE))->filter(fn ($file) => ! Str::contains($file, $excludePattern, true))->values()->toArray();
     }
 
     public function addAttachmentFromFile($file): bool
@@ -202,19 +180,18 @@ final class Attachments extends Module
         $query = (string) str($file)->before(self::FILES_DELIMITER);
         $filename = (string) str($file)->after(self::FILES_DELIMITER);
 
-        if ($query === 'exit') {
+        if ('exit' === $query) {
             return false;
         }
 
-        if (! $filename) {
+        if ( ! $filename) {
             return false;
         }
 
         try {
-            $base = config('synth.file_base', base_path());
-            $contents = file_get_contents($base.'/'.$filename);
-        } catch (\Throwable $th) {
-            $this->synthController->cmd->error("Could not find file $filename");
+            $contents = file_get_contents($filename);
+        } catch (Throwable $th) {
+            $this->synthController->cmd->error("Could not find file {$filename}");
 
             return true;
         }
@@ -224,11 +201,11 @@ final class Attachments extends Module
         return true;
     }
 
-    public function addAttachmentFromMessage($key, ChatMessage $message)
+    public function addAttachmentFromMessage($key, ChatMessage $message): void
     {
         $content = $message->content;
         $args = $message->function_call['arguments'] ?? '';
 
-        $this->synthController->addAttachedFile($key, $content.$args);
+        $this->synthController->addAttachedFile($key, $content . $args);
     }
 }

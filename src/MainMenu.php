@@ -1,68 +1,77 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth;
 
 use Blinq\Synth\Controllers\SynthController;
 use Blinq\Synth\Traits\WithHooks;
-use Illuminate\Console\Command;
+use PhpSchool\CliMenu\CliMenu;
 
 class MainMenu
 {
     use WithHooks;
 
-    protected SynthController $synthController;
-
     public $modules = [];
 
-    public function setSynthController()
+    protected SynthController $synthController;
+
+    public function setSynthController(): void
     {
         $this->synthController = app(SynthController::class);
     }
 
-    public function showTokenCount()
+    public function showTokenCount(): void
     {
         $tokens = $this->synthController->cmd->synth->estimateTokenCount();
         $history = $this->synthController->cmd->synth->ai->getHistory();
 
         if ($tokens > 0) {
-            $this->synthController->cmd->info('Estimated token count: '.$tokens);
-            $this->synthController->cmd->info('Number of messages: '.count($history));
+            $this->synthController->cmd->info('Estimated token count: ' . $tokens);
+            $this->synthController->cmd->info('Number of messages: ' . count($history));
             $this->synthController->cmd->newLine();
         }
     }
 
-    public function welcome(): void
+    public function logo(): string
     {
-        $this->synthController->cmd->info('--------------------------------------------');
-        $this->synthController->cmd->info('░░░░░░░ ░░    ░░ ░░░    ░░ ░░░░░░░░ ░░   ░░ ');
-        $this->synthController->cmd->info('▒▒       ▒▒  ▒▒  ▒▒▒▒   ▒▒    ▒▒    ▒▒   ▒▒ ');
-        $this->synthController->cmd->info('▒▒▒▒▒▒▒   ▒▒▒▒   ▒▒ ▒▒  ▒▒    ▒▒    ▒▒▒▒▒▒▒ ');
-        $this->synthController->cmd->info('     ▓▓    ▓▓    ▓▓  ▓▓ ▓▓    ▓▓    ▓▓   ▓▓ ');
-        $this->synthController->cmd->info('███████    ██    ██   ████    ██    ██   ██ ');
-        $this->synthController->cmd->info('--------------------------------------------');
-    }
-
-    public function handle()
-    {
-        $this->welcome();
-
-        $synthController = app(SynthController::class);
-        $moduleOptions = $synthController->modules->getOptions();
-
-        $options = [
-            ...$moduleOptions,
-            'exit' => 'Exit',
+        $welcome = [
+            '░░░░░░░ ░░    ░░ ░░░    ░░ ░░░░░░░░ ░░   ░░ ',
+            '▒▒       ▒▒  ▒▒  ▒▒▒▒   ▒▒    ▒▒    ▒▒   ▒▒ ',
+            '▒▒▒▒▒▒▒   ▒▒▒▒   ▒▒ ▒▒  ▒▒    ▒▒    ▒▒▒▒▒▒▒ ',
+            '     ▓▓    ▓▓    ▓▓  ▓▓ ▓▓    ▓▓    ▓▓   ▓▓ ',
+            '███████    ██    ██   ████    ██    ██   ██ ',
+            '',
+            'What do you want to do?',
         ];
 
-        while (true) {
+        return implode(PHP_EOL, $welcome);
+    }
 
-            $synthController->getSessionInformation();
-            $option = $this->synthController->cmd->choice('What do you want to do?', $options);
-            $synthController->modules->select($option);
+    public function handle(): void
+    {
 
-            if ($option === 'exit') {
-                return Command::SUCCESS;
-            }
+        $synthController = app(SynthController::class);
+
+        $menu = $this->synthController->cmd->menu($this->logo())
+            ->setTitleSeparator('-')
+            ->enableAutoShortcuts()
+            ->setForegroundColour('green')
+            ->setBackgroundColour('black');
+
+        foreach ($synthController->modules->getOptions() as $module) {
+            $menu->addItem($module['name'], function (CliMenu $menu) use ($module): void {
+                $module['module']->doCallback($menu);
+            });
         }
+
+        // while (true) {
+        $menu->open();
+        //$synthController->getSessionInformation();
+
+        //            if ('exit' === $option) {
+        //                return Command::SUCCESS;
+        //            }
+        //}
     }
 }

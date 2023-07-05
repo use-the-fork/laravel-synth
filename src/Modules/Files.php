@@ -1,102 +1,80 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
-use Blinq\Synth\Controllers\SynthController;
+use PhpSchool\CliMenu\CliMenu;
+use function Termwind\{render};
 
 /**
  * This file is a module in the Synth application, specifically for handling file operations.
  * It provides functionality to write files to the filesystem, manage unwritten files, and clear files.
  */
-class Files extends Module
+final class Files extends Module
 {
-    public array $files = [];
-
     public function name(): string
     {
         return 'Files';
     }
 
-    public function register(): array
+    public function register(): string
     {
-        $synthController = app(SynthController::class);
-        $synthController->mainMenu->on('show', function () {
-            $this->notice();
-        });
-
-        return [
-            'write' => 'Write files to the filesystem',
-        ];
+        return 'Write: Write files to the filesystem.';
     }
 
-    public function notice()
-    {
-        if (count($this->files) > 0) {
-            $count = count($this->files);
-            $this->synthController->cmd->info("You have $count unwritten files:");
-            echo collect($this->files)->keys()->map(fn ($x) => '- '.$x)->implode(PHP_EOL);
-            $this->synthController->cmd->newLine(2);
-        }
-    }
-
-    public function onSelect(?string $key = null): void
+    public function onSelect(CliMenu $menu): void
     {
         $this->write();
     }
 
-    public function write()
+    public function write(): void
     {
         $this->synthController->cmd->info('Writing files to the filesystem...');
         $this->synthController->cmd->newLine();
 
         $base = config('synth.file_base', base_path());
 
-        foreach ($this->files as $file => $contents) {
-            $basename = basename($file);
+        foreach ($this->synthController->attachedFiles as $file) {
 
-            $this->synthController->cmd->comment($file);
-            $this->synthController->cmd->comment('----');
-            $this->synthController->cmd->line($contents);
+            $basename = basename($file->getFile());
 
-            $fullFile = $base.'/'.$file;
+            render("
+                <div>
+                    <div class='px-1 bg-green-600'>{$file->getFile()}</div>
+                    <code>
+                        {$file->getFormatted()}
+                    </code>
+                </div>
+            ");
+
+            if (file_exists($file->getFile())) {
+                $fullFile = $base . '/' . $file->getFile();
+            } else {
+                $fullFile = $base . '/' . $file->getFile();
+            }
 
             $fileExists = file_exists($fullFile);
 
-            if ($this->synthController->cmd->confirm("Write $basename?".($fileExists ? ' (File already exists)' : ''), ! $fileExists)) {
-                $file = $this->synthController->cmd->askWithCompletion('Write path', [$file], $file);
+            if ($this->synthController->cmd->confirm("Write {$basename}?" . ($fileExists ? ' (File already exists)' : ''), ! $fileExists)) {
+                $filePath = $this->synthController->cmd->askWithCompletion('Write path', [$fullFile], $fullFile);
 
-                if ($file) {
-                    $file = $base.'/'.$file;
-                    $directory = dirname($file);
+                if ($filePath) {
+                    $filePath = $base . '/' . $filePath;
+                    $directory = dirname($filePath);
 
-                    if (! is_dir($directory)) {
+                    if ( ! is_dir($directory)) {
                         mkdir($directory, 0777, true);
                     }
 
-                    file_put_contents($file, $contents);
+                    file_put_contents($filePath, $file->getContent());
 
-                    $this->synthController->cmd->info("Written $file");
+                    $this->synthController->cmd->info("Written {$filePath}");
                 }
             }
         }
 
-        $this->clearFiles();
         $this->synthController->cmd->info('Done!');
         $this->synthController->cmd->newLine();
-    }
-
-    public function addFile($name, $contents)
-    {
-        $this->files[$name] = $contents;
-    }
-
-    public function removeFile($name)
-    {
-        unset($this->files[$name]);
-    }
-
-    public function clearFiles()
-    {
-        $this->files = [];
     }
 }
