@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth;
 
 use Blinq\LLM\Entities\ChatMessage;
@@ -12,8 +14,6 @@ use OpenAI\Client;
 
 class Synth
 {
-    protected SynthController $synthController;
-
     public Client $ai;
 
     public $smallModel = 'gpt-3.5-turbo-0613';
@@ -21,6 +21,13 @@ class Synth
     public $largeModel = 'gpt-3.5-turbo-16k-0613';
 
     public $model = 'gpt-3.5-turbo-0613';
+
+    public array $allowed = [
+        'save_migrations',
+        'save_files',
+    ];
+
+    protected SynthController $synthController;
 
     /**
      * @throws MissingOpenAIKeyException
@@ -31,7 +38,7 @@ class Synth
         $this->smallModel = config('synth.small_model', $this->smallModel);
         $this->largeModel = config('synth.large_model', $this->largeModel);
 
-        if (! config('synth.openai_key')) {
+        if ( ! config('synth.openai_key')) {
             throw MissingOpenAIKeyException::make();
         }
         $this->ai = OpenAI::client(config('synth.openai_key'));
@@ -42,11 +49,11 @@ class Synth
         $this->synthController = app(SynthController::class);
     }
 
-    public function loadSystemMessage(string $name)
+    public function loadSystemMessage(string $name): void
     {
 
         $messageStore[0] = ['role' => 'user', 'content' => 'Hello!'];
-        $this->ai->setSystemMessage(include __DIR__."/Prompts/$name.system.php");
+        $this->ai->setSystemMessage(include __DIR__ . "/Prompts/{$name}.system.php");
     }
 
     public function chat(string $message, array $options = [])
@@ -66,26 +73,26 @@ class Synth
                 $this->model = $this->largeModel;
 
                 return $this->chat($message, $options);
-            } else {
-                $this->cmd->error('OpenAI Error: '.$ex->getMessage());
             }
+            $this->cmd->error('OpenAI Error: ' . $ex->getMessage());
+
         }
     }
 
-    public function handleExitSignal()
+    public function handleExitSignal(): void
     {
         declare(ticks=1); // Allow posix signal handling
 
-        pcntl_signal(SIGINT, function () {
+        pcntl_signal(SIGINT, function (): void {
             if ($this->ai->isBusy()) {
                 $this->ai->cancelRequest();
             }
         });
     }
 
-    public function handleStream()
+    public function handleStream(): void
     {
-        $this->ai->addStreamHandler(function (ChatStream $x) {
+        $this->ai->addStreamHandler(function (ChatStream $x): void {
             $this->cmd->getOutput()->write(
                 $x->getMessage()?->content ?? ''
             );
@@ -100,33 +107,28 @@ class Synth
         });
     }
 
-    public array $allowed = [
-        'save_migrations',
-        'save_files',
-    ];
-
-    public function handleFunctionsForLastMessage()
+    public function handleFunctionsForLastMessage(): void
     {
         $lastMessage = $this->ai->getLastMessage();
 
-        if (! $lastMessage) {
+        if ( ! $lastMessage) {
             return;
         }
 
         $this->handleFunctions($lastMessage);
     }
 
-    public function handleFunctions(ChatMessage $message)
+    public function handleFunctions(ChatMessage $message): void
     {
         $functionCall = $message->function_call['name'] ?? null;
         $args = $message->function_call['arguments'] ?? null;
 
-        if (! $functionCall) {
+        if ( ! $functionCall) {
             return;
         }
 
-        if (! Functions::isAllowed($functionCall)) {
-            $this->cmd->error("Function $functionCall is not allowed");
+        if ( ! Functions::isAllowed($functionCall)) {
+            $this->cmd->error("Function {$functionCall} is not allowed");
 
             return;
         }
@@ -135,7 +137,7 @@ class Synth
             $args = $this->fixSyntax($args);
             $parsed = json_decode($args, true);
 
-            if (! $parsed) {
+            if ( ! $parsed) {
                 $this->cmd->error('--------');
                 $this->cmd->error($args);
                 $this->cmd->error('--------');
@@ -167,9 +169,7 @@ class Synth
     public function estimateTokenCount(): int
     {
         $wordCount = collect($this->ai->getHistory())
-            ->reduce(function ($carry, ChatMessage $item) {
-                return $carry + str($item->content)->explode(' ')->count();
-            }, 0);
+            ->reduce(fn ($carry, ChatMessage $item) => $carry + str($item->content)->explode(' ')->count(), 0);
 
         return floor($wordCount * 0.75);
     }

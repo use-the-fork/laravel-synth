@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Commands;
 
 use Blinq\Synth\Controllers\SynthController;
