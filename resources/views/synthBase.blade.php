@@ -6,8 +6,11 @@
 
     <title>A Basic HTML5 Template</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    @include('synth::partials.styles')
     @livewireStyles
 </head>
 
@@ -17,8 +20,39 @@
 
 @livewireScripts
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
         crossorigin="anonymous"></script>
+<script>
+    document.getElementById("synth_chat_input")
+        .addEventListener("keyup", function (event) {
+            event.preventDefault();
+            if (event.keyCode === 13) {
+                switch (event.target.value) {
+                    case '/edit' || '/e':
+                        Livewire.emit('doChatEdit');
+                        break;
+                    case '/commit' || '/c':
+                        Livewire.emit('doCommit');
+                        break;
+                    default:
+                        Livewire.emit('doChat');
+                }
+                //Livewire.emit('postAdded');
+                console.log(event.target.value);
+            }
+        });
+    document.addEventListener("DOMContentLoaded", () => {
+        Livewire.hook('message.sent', (message,
+                                       component) => {
+            console.log(component);
+        })
+        Livewire.hook('message.processed', (message,
+                                            component) => {
+            console.log(component);
+        })
+    });
+</script>
+
 </body>
 </html>

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Blinq\Synth;
 
-use Blinq\Synth\Livewire\ChatLivewire;
+use Blinq\Synth\Livewire\AttachFiles;
+use Blinq\Synth\Livewire\ChatResponse;
+use Blinq\Synth\Livewire\Synth;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -35,9 +37,11 @@ class SynthServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        Livewire::component('synth-chat', ChatLivewire::class);
+        Livewire::component('synth-chat', Synth::class);
+        Livewire::component('synth-attach-files', AttachFiles::class);
+        Livewire::component('synth-chat-response', ChatResponse::class);
 
-        //  Livewire::component('synth-chat', ChatLivewire::class);
+        //  Livewire::component('synth-chat', Synth::class);
         //
         //        $this->app->singleton(
         //            abstract: SynthController::class,
