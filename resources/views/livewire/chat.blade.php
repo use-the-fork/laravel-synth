@@ -6,8 +6,8 @@
                     <div
                         class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
                     <span
-                        class="d-flex align-items-center pb-3 pt-1 md-0 md-auto text-white text-decoration-none">
-                        <span class="logo d-none d-sm-inline">
+                        class="d-flex align-items-center pt-1 md-0 md-auto text-white text-decoration-none">
+                        <span class="logo d-sm-inline">
                             <pre>
 ░░░░░░░ ░░    ░░ ░░░    ░░ ░░░░░░░░ ░░   ░░
 ▒▒       ▒▒  ▒▒  ▒▒▒▒   ▒▒    ▒▒    ▒▒   ▒▒
@@ -17,6 +17,14 @@
                             </pre>
                         </span>
                     </span>
+                        <span
+                            class="d-flex flex-column pb-3 pt-1 md-0 md-auto text-synth text-decoration-none border-bottom">
+                            <span>System Stats</span>
+                            <span>Model: {{ $system['model'] }}</span>
+                            <span>Tokens: {{ $system['tokens'] }} ({{ $system['percent'] }}%)</span>
+                            <span>Files: {{ $system['files'] }}</span>
+                        </span>
+
                         <ul class="nav nav-pills flex-column mb-0 align-items-center align-items-sm-start"
                             id="menu">
                             <li class="nav-item">
@@ -108,9 +116,8 @@
                                 @include('synth::livewire.chat-response', ['history' => $history])
                             @endforeach
 
-                            <div class="d-flex response response--is-assistant p-3 gap-3  visually-hidden"
-                                 wire:loading.class.remove="visually-hidden"
-                                 wire:target="doInputChange"
+                            <div
+                                class="d-flex response response--is-assistant p-3 gap-3 {{$isLoading ? '' : 'visually-hidden' }}"
                             >
                                 <div class="d-flex flex-column align-items-end flex-shrink-0 response__role">
                                 <span class="badge bg-secondary ">
@@ -133,8 +140,6 @@
                                        aria-label="Input chat" aria-describedby="button-addon2"
                                        id="synth_chat_input"
                                        wire:model="chatText"
-                                       wire:loading.delay
-                                       wire:loading.attr="disabled"
                                 >
                             </div>
                             <div id="emailHelp" class="form-text text-white">/edit to edit last response, /commit to

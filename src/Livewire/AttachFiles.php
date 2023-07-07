@@ -27,7 +27,11 @@ class AttachFiles extends Component
 
     public function render()
     {
-        $this->foundFiles = collect($this->fileSystem)->filter(fn ($file) => Str::contains($file, $this->searchTerm, true))->toArray();
+        if ( ! empty($this->searchTerm)) {
+            $this->foundFiles = collect($this->fileSystem)->filter(fn ($file) => Str::contains($file, $this->searchTerm, true))->toArray();
+        } else {
+            $this->foundFiles = collect($this->fileSystem)->toArray();
+        }
 
         return view('synth::livewire.attach-files');
     }

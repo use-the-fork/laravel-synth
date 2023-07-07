@@ -16,7 +16,7 @@ class MissingOpenAIKeyException extends Exception implements ProvidesSolution
      */
     public static function make(): static
     {
-        return new static('OPENAI_KEY not set, please set it in your .env or config/web.php');
+        return new static('OPENAI_API_KEY not set, please set it in your .env or config/web.php');
     }
 
     /**
@@ -25,6 +25,6 @@ class MissingOpenAIKeyException extends Exception implements ProvidesSolution
     public function getSolution(): Solution
     {
         return BaseSolution::create('OpenAI Key not set')
-            ->setSolutionDescription('You should register your OpenAI key in your .env (OPENAI_KEY) or config/web.php');
+            ->setSolutionDescription('You should register your OpenAI key in your .env (OPENAI_API_KEY) or config/web.php');
     }
 }

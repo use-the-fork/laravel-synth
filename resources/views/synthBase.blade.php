@@ -30,28 +30,18 @@
             if (event.keyCode === 13) {
                 switch (event.target.value) {
                     case '/edit' || '/e':
-                        Livewire.emit('doChatEdit');
+                        Livewire.emit('doChatCommand', 'doChatEdit');
                         break;
                     case '/commit' || '/c':
-                        Livewire.emit('doCommit');
+                        Livewire.emit('doChatCommand', 'doCommit');
                         break;
                     default:
-                        Livewire.emit('doChat');
+                        Livewire.emit('doChatCommand', 'doChat');
                 }
                 //Livewire.emit('postAdded');
                 console.log(event.target.value);
             }
         });
-    document.addEventListener("DOMContentLoaded", () => {
-        Livewire.hook('message.sent', (message,
-                                       component) => {
-            console.log(component);
-        })
-        Livewire.hook('message.processed', (message,
-                                            component) => {
-            console.log(component);
-        })
-    });
 </script>
 
 </body>

@@ -10,7 +10,6 @@ use Blinq\Synth\Interfaces\PromptInterface;
 use Blinq\Synth\ValueObjects\AttachedFileValueObject;
 use Blinq\Synth\ValueObjects\ChatMessageValueObject;
 use GuzzleHttp\Client as GuzzleClient;
-use Illuminate\Support\Arr;
 use OpenAI;
 use OpenAI\Client;
 
@@ -47,30 +46,14 @@ class AiService
         $currentMessageToSend = [...$this->messageToSend, ChatMessageValueObject::make('user', $currentQuestion)];
 
         $response = $this->create($currentMessageToSend);
-        $response = $response->choices[0]->toArray();
 
-        return $response;
+        $response = $response->toArray();
 
-    }
-
-    public function updateFinalResponse(array $response): void
-    {
-        $content = Arr::get($response, 'delta.content', '');
-        $functionCall = Arr::get($response, 'delta.function_call.name', '');
-        $arguments = Arr::get($response, 'delta.function_call.arguments', '');
-
-        if (Arr::get($response, 'delta.role')) {
-            $this->finalResponse['role'] = Arr::get($response, 'delta.role');
-        }
-
-        if (Arr::get($response, 'finish_reason')) {
-            $this->finalResponse['finish_reason'] = Arr::get($response, 'finish_reason');
-        }
-
-        $this->finalResponse['content'] = $this->finalResponse['content']->append($content);
-        $this->finalResponse['function_call']['name'] = $this->finalResponse['function_call']['name']->append($functionCall);
-        $this->finalResponse['function_call']['arguments'] = $this->finalResponse['function_call']['arguments']->append($arguments);
-
+        return [
+            ...$response['choices'][0],
+            'model' => $response['model'],
+            'total_tokens' => $response['usage']['total_tokens'],
+        ];
     }
 
     private function prepareChatMessage(): void

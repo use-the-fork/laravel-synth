@@ -7,7 +7,7 @@
         </div>
         <div class="d-flex flex-column response__content">
             <x-markdown>
-                {{ $history['content'] }}
+                {!!  $history['content']  !!}
             </x-markdown>
         </div>
     </div>
