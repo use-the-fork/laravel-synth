@@ -9,23 +9,24 @@ use Blinq\Synth\Helpers\ChatTokenService;
 use Blinq\Synth\Interfaces\PromptInterface;
 use Blinq\Synth\ValueObjects\AttachedFileValueObject;
 use Blinq\Synth\ValueObjects\ChatMessageValueObject;
+use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use OpenAI;
 use OpenAI\Client;
 
-class AiService
+final class AiService
 {
     public Client   $openaiClient;
 
-    protected array $finalResponse;
-
-    protected array $functions;
-
     protected array $messageToSend;
 
+    protected array $functions = [];
+
+    protected array $attachedFiles = [];
+
     public function __construct(
-        private PromptInterface $systemMessage,
-        private array $attachedFiles = [],
+        private PromptInterface $promptInterface,
+        array|string $attachedFiles = '',
     ) {
 
         if ( ! config('synth.openai_key')) {
@@ -37,13 +38,26 @@ class AiService
             ->withHttpClient(new GuzzleClient(['timeout' => 90.0])) // default: HTTP client found using PSR-18 HTTP Client Discovery
             ->make();
 
+        if (is_string($attachedFiles)) {
+            $this->attachedFiles = [$attachedFiles];
+        }
+
+        if (is_array($attachedFiles)) {
+            $this->attachedFiles = $attachedFiles;
+        }
+
+        //use the promptInterface to get the functions
+        foreach ($promptInterface->getFunctions() as $function) {
+            $this->functions[$function->getName()] = $function;
+        }
+
     }
 
-    public function chat(string $currentQuestion)
+    public function chat(string $question)
     {
         $this->prepareChatMessage();
 
-        $currentMessageToSend = [...$this->messageToSend, ChatMessageValueObject::make('user', $currentQuestion)];
+        $currentMessageToSend = [...$this->messageToSend, ChatMessageValueObject::make('user', $question)];
 
         $response = $this->create($currentMessageToSend);
 
@@ -58,62 +72,51 @@ class AiService
 
     private function prepareChatMessage(): void
     {
-        $this->finalResponse = [
-            'role' => '',
-            'content' => str(''),
-            'function_call' => [
-                'name' => str(''),
-                'arguments' => str(''),
-            ],
-            'finish_reason' => '',
-        ];
 
         $this->messageToSend = [];
 
-        $this->messageToSend[] = ChatMessageValueObject::make('system', $this->addGlobalInstructions($this->systemMessage->getSystem()->getContent()));
+        $this->messageToSend[] = ChatMessageValueObject::make('system', $this->promptInterface->getSystem()->getContent());
 
         if ( ! empty($this->attachedFiles)) {
-            $filesToSend = "# Anythings below this line is what we have currently built. Files are seperated by \"\"\"\n\n";
+            $filesToSend = "# Anything below this line is what we have currently built. Files are seperated by \"\"\"\n\n";
             foreach ($this->attachedFiles as $file) {
                 $file = AttachedFileValueObject::make($file, file_get_contents(base_path($file)), false);
-                $filesToSend .= $file->getMinifiedContent() . '"""' . "\n";
+                $filesToSend .= $file->getContent() . '"""' . "\n";
             }
             $this->messageToSend[] = ChatMessageValueObject::make('user', $filesToSend);
         }
     }
 
-    private function addGlobalInstructions(string $message): string
+    private function create(array $currentMessageToSend)
     {
-        $message = [
-            $message,
-            '* If you need more information about a third party class or method the application is using respond with the need_documentation function.',
-            '* If you need more information about a class being used in the application respond with the need_class function.',
-            ...config('synth.global_instructions'),
-        ];
 
-        return implode("\n", $message);
-    }
+        $modalToExclude = [];
+        while (true) {
+            $message = [
+                'model' => '',
+                'messages' => $currentMessageToSend,
+            ];
+            if ( ! empty($this->functions)) {
 
-    private function create(array $currentMessageToSend, bool $withFunctions = false)
-    {
-        $getModalToUse = ChatTokenService::getModalToUse($currentMessageToSend);
+                $functions = [];
+                foreach ($this->functions as $function) {
+                    $functions[] = $function->getFunctionJson();
+                }
 
-        $streamMessage = [
-            'model' => $getModalToUse['model'],
-            'messages' => $currentMessageToSend,
-        ];
-
-        if ( ! empty($withFunctions)) {
-
-            $functions = [];
-            foreach ($this->functions as $function) {
-                $functions[] = $function->getFunctionJson();
+                $message['functions'] = $functions;
             }
 
-            $streamMessage['functions'] = $functions;
-        }
+            $getModalToUse = ChatTokenService::getModalToUse($message, $modalToExclude);
+            $message['model'] = $getModalToUse['model'];
 
-        return $this->openaiClient->chat()->create($streamMessage);
+            try {
+                return $this->openaiClient->chat()->create($message);
+            } catch (Exception $e) {
+                dd($e);
+                //throw $th;
+            }
+
+        }
 
     }
 }

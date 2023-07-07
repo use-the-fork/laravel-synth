@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Prompts;
 
 use Blinq\Synth\Exceptions\StubNotFoundException;
@@ -19,6 +21,16 @@ class Prompt implements PromptInterface
         return $this->functions;
     }
 
+    public function doFunction(array $functionCall)
+    {
+        $function = collect($this->functions)
+            ->first(fn ($function) => $function->getName() === $functionCall['name']);
+
+        if ($function) {
+            return $function->doFunction($functionCall['arguments']);
+        }
+    }
+
     public function getSystem(): ChatMessageValueObject
     {
         return $this->system;
@@ -34,9 +46,9 @@ class Prompt implements PromptInterface
      */
     protected function resolveStubPath(string $stub): string
     {
-        $stubDirectory = __DIR__.'/../../stubs/';
+        $stubDirectory = __DIR__ . '/../../stubs/';
 
-        $stubFilePath = $stubDirectory.$stub;
+        $stubFilePath = $stubDirectory . $stub;
 
         if (file_exists($stubFilePath)) {
             return file_get_contents($stubFilePath);

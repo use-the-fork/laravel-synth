@@ -8,7 +8,7 @@ use PhpSchool\CliMenu\CliMenu;
 use function Termwind\{render};
 
 /**
- * This file is a module in the Synth application, specifically for handling file operations.
+ * This file is a module in the Chat application, specifically for handling file operations.
  * It provides functionality to write files to the filesystem, manage unwritten files, and clear files.
  */
 final class Files extends Module

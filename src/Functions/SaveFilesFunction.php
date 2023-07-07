@@ -44,7 +44,7 @@ class SaveFilesFunction extends BaseFunction implements FunctionInterface
                                     ],
                                     'contents' => [
                                         'type' => 'string',
-                                        'description' => 'The WHOLE contents of the file. With nothing truncated.',
+                                        'description' => 'The WHOLE contents of the file with everything escaped for decoding and nothing truncated.',
                                     ],
                                 ],
                             ],
@@ -54,12 +54,15 @@ class SaveFilesFunction extends BaseFunction implements FunctionInterface
             ];
     }
 
-    public function doFunction(string $jsonString, array $attachedFiles): array
+    public function doFunction(string $message): array
     {
 
-        $jsonString = $this->fixSyntax($jsonString);
-        $jsonString = json_decode($jsonString, true);
+        $attachedFiles = [];
+        $jsonString = json_decode($this->fixSyntax($message), true);
         if (empty($jsonString['files'])) {
+            dump(json_decode($this->fixSyntax($message), true));
+            dump($this->fixSyntax($message));
+            dd($message);
             throw MissingFunctionParametersException::make($this::class);
         }
 

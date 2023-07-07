@@ -8,14 +8,17 @@ use Blinq\Synth\Exceptions\NoModelFoundException;
 
 class ChatTokenService extends TokenService
 {
-    public static function getModalToUse($messages): array
+    public static function getModalToUse($message, array $modalToExclude = []): array
     {
-        $estimatedCount = self::estimateTokenCount($messages);
+        $estimatedCount = self::estimateTokenCount($message);
 
         $modals = collect(config('synth.models.chat'))->sortBy('max_tokens')->toArray();
         //iterate through the modals and choose the one that fits the estimated count
         foreach ($modals as $modal) {
-            if ($estimatedCount <= $modal['max_tokens']) {
+            if (
+                ! in_array($modal['name'], $modalToExclude) &&
+                $estimatedCount <= $modal['max_tokens']
+            ) {
                 return [
                     'model' => $modal['name'],
                     'estimatedCount' => $estimatedCount,

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
 use Blinq\LLM\Entities\ChatMessage;
 use Illuminate\Support\Facades\DB;
 
 /**
- * This file is a module in the Synth application, specifically for handling chat interactions.
+ * This file is a module in the Chat application, specifically for handling chat interactions.
  * It provides functionality to chat with GPT and create/update files using the chat interface.
  */
 class Schema extends Module
@@ -20,7 +22,7 @@ class Schema extends Module
 
     public function register(): array
     {
-        $this->synthController->mainMenu->on('show', function () {
+        $this->synthController->mainMenu->on('show', function (): void {
             $this->notice();
         });
 
@@ -44,11 +46,11 @@ class Schema extends Module
         $output = "[table_schema]\n\n";
 
         foreach ($tables as $table) {
-            $output .= "Table: $table\n\n";
-            $columns = DB::select('SHOW COLUMNS FROM '.$table);
+            $output .= "Table: {$table}\n\n";
+            $columns = DB::select('SHOW COLUMNS FROM ' . $table);
             foreach ($columns as $column) {
                 $column = (array) $column;
-                $output .= '* '.$column['Field'].' ('.$column['Type'].")\n";
+                $output .= '* ' . $column['Field'] . ' (' . $column['Type'] . ")\n";
             }
         }
 
@@ -57,7 +59,7 @@ class Schema extends Module
         $this->addToChatHistory($output);
     }
 
-    public function addToChatHistory(string $string)
+    public function addToChatHistory(string $string): void
     {
         $history = $this->synthController->synth->ai->getHistory();
 
@@ -66,13 +68,13 @@ class Schema extends Module
          * @var ChatMessage $message
          */
         foreach ($history as &$message) {
-            if ($message->role == 'user' && str($message->content)->contains('[table_schema]')) {
+            if ('user' == $message->role && str($message->content)->contains('[table_schema]')) {
                 $message->content = $string;
                 $found = true;
             }
         }
 
-        if (! $found) {
+        if ( ! $found) {
             $this->synthController->synth->ai->addHistory(new ChatMessage('user', $string));
             // $history = $this->cmd->synth->ai->getHistory();
         }
@@ -80,7 +82,7 @@ class Schema extends Module
         $this->schema = $string;
     }
 
-    public function notice()
+    public function notice(): void
     {
         if ($this->schema) {
             $this->synthController->cmd->info('Schema is attached to this conversation.');

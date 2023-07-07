@@ -1,17 +1,20 @@
-
 # Synth for Laravel
+
 (Not a official laravel package)
 
 <img width="693" alt="Synth for Laravel" src="https://github.com/blinq-dev/laravel-synth/assets/168357/7dccb9ba-1db5-4d6f-9a41-fde6f99a2446">
 
-Synth is a Laravel tool that helps you generate code and perform various tasks in your Laravel application. It leverages the power of OpenAI's GPT language model to provide an interactive and intelligent development experience.
+Synth is a Laravel tool that helps you generate code and perform various tasks in your Laravel application. It leverages
+the power of OpenAI's GPT language model to provide an interactive and intelligent development experience.
 
 ## Demo
 
 ### Architect -> create a todo app 😎🏗️📝
+
 https://github.com/blinq-dev/laravel-synth/assets/168357/78116a9a-1f37-4410-9f20-f9fe6573196b
 
 ### Attach files and create a readme.md 📎📄✍️
+
 https://github.com/blinq-dev/laravel-synth/assets/168357/70bc57a5-0aa8-439f-95af-fb02685e3756
 
 ## Installation
@@ -33,6 +36,7 @@ https://github.com/blinq-dev/laravel-synth/assets/168357/70bc57a5-0aa8-439f-95af
    ```   OPENAI_KEY=YOUR_API_KEY   ```
 
 ## Usage
+
 To use Synth, simply run the `synth` command:
 
 ```bash
@@ -42,6 +46,7 @@ php artisan synth
 This will open the Synth CLI, where you can interact with the GPT model and perform various tasks.
 
 ### Features 🌟
+
 - Automatically switch from small to large model when needed (gpt-3.5-turbo vs gpt-3.5-turbo-16k) 🔄
 - Uses the functions API of OpenAI 👨‍💻
 - Cancel generation with Ctrl+C 🚫⌨
@@ -55,11 +60,13 @@ This will open the Synth CLI, where you can interact with the GPT model and perf
 
 You can select a module from the main menu and follow the prompts to perform the desired actions.
 
-> Note: Some modules require a previous step to be completed, such as creating an architecture before generating migrations or models.
+> Note: Some modules require a previous step to be completed, such as creating an architecture before generating
+> migrations or models.
 
 ## Writing Your Own Modules
 
-Synth allows you to extend its functionality by writing your own modules. A module is a class that implements the necessary methods to register and handle specific actions.
+Synth allows you to extend its functionality by writing your own modules. A module is a class that implements the
+necessary methods to register and handle specific actions.
 
 To create a new module, follow these steps:
 
@@ -76,7 +83,7 @@ use Blinq\Synth\Modules\Module;
 /**
  * Class MyModule
  * 
- * @propery \Blinq\Synth\Commands\SynthCommand $cmd
+ * @propery \Blinq\Chat\Commands\SynthCommand $cmd
  */
 class MyModule extends Module
 {
@@ -149,7 +156,8 @@ class MyModule extends Module
 }
 ```
 
-You can then register your custom module in the `Modules` class within the Synth package and use it in the CLI interface:
+You can then register your custom module in the `Modules` class within the Synth package and use it in the CLI
+interface:
 
 ```php
 use Blinq\Synth\Modules;

@@ -30,15 +30,6 @@ class AttachedFileValueObject implements Arrayable
         return $this->content;
     }
 
-    public function getMinifiedContent(): string
-    {
-        $file = tmpfile();
-        $path = stream_get_meta_data($file)['uri'];
-        file_put_contents($path, $this->content);
-
-        return php_strip_whitespace($path);
-    }
-
     public function isModified(): bool
     {
         return $this->modified;

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
 use Blinq\LLM\Entities\ChatMessage;
 
 /**
- * This file is a module in the Synth application, specifically for handling application architecture.
+ * This file is a module in the Chat application, specifically for handling application architecture.
  * It provides functionality to brainstorm and generate a new application architecture using GPT.
  */
 class History extends Module

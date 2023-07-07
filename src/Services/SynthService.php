@@ -120,7 +120,7 @@ class SynthService
     {
         $this->cmd = $cmd;
 
-        //Set Synth controller for all classes
+        //Set Chat controller for all classes
         $this->mainMenu->setSynthController();
         $this->modules->setSynthController();
     }

@@ -6,7 +6,7 @@ namespace Blinq\Synth\Prompts;
 
 use Blinq\Synth\ValueObjects\ChatMessageValueObject;
 
-class StartSessionPrompt extends Prompt
+class ChatPrompt extends Prompt
 {
     public function __construct()
     {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Blinq\Synth;
 
-use Blinq\Synth\Controllers\SynthController;
+use Blinq\Synth\Controllers\ChatController;
 use Blinq\Synth\Exceptions\NotAModuleInterfaceException;
 use Blinq\Synth\Interfaces\ModuleInterface;
 use Blinq\Synth\Modules\Architect;
@@ -13,7 +13,7 @@ use Blinq\Synth\Modules\Files;
 use Blinq\Synth\Modules\StartSession;
 
 /**
- * This file is responsible for managing the modules in the Synth application.
+ * This file is responsible for managing the modules in the Chat application.
  * It includes functionality to register, retrieve, and interact with modules.
  */
 final class Modules
@@ -32,11 +32,11 @@ final class Modules
 
     protected array $modules = [];
 
-    protected SynthController $synthController;
+    protected ChatController $synthController;
 
     public function setSynthController(): void
     {
-        $this->synthController = app(SynthController::class);
+        $this->synthController = app(ChatController::class);
     }
 
     /**

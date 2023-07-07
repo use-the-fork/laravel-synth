@@ -6,10 +6,10 @@ namespace Blinq\Synth\Controllers;
 
 use Illuminate\Routing\Controller;
 
-class SynthController extends Controller
+class ModifyController extends Controller
 {
-    public function show()
+    public function __invoke()
     {
-        return view('synth::synthBase');
+        return view('synth::modify');
     }
 }

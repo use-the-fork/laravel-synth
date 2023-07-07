@@ -7,7 +7,7 @@ namespace Blinq\Synth;
 use Blinq\LLM\Entities\ChatMessage;
 use Blinq\LLM\Entities\ChatStream;
 use Blinq\LLM\Exceptions\ApiException;
-use Blinq\Synth\Controllers\SynthController;
+use Blinq\Synth\Controllers\ChatController;
 use Blinq\Synth\Exceptions\MissingOpenAIKeyException;
 use OpenAI;
 use OpenAI\Client;
@@ -27,7 +27,7 @@ class Synth
         'save_files',
     ];
 
-    protected SynthController $synthController;
+    protected ChatController $synthController;
 
     /**
      * @throws MissingOpenAIKeyException
@@ -46,7 +46,7 @@ class Synth
 
     public function setSynthController(): void
     {
-        $this->synthController = app(SynthController::class);
+        $this->synthController = app(ChatController::class);
     }
 
     public function loadSystemMessage(string $name): void

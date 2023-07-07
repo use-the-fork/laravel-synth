@@ -1,9 +1,11 @@
 <?php
 
-use Blinq\Synth\Prompts\StartSessionPrompt;
+declare(strict_types=1);
 
-it('has Chat prompts', function () {
-    $architectPrompt = new StartSessionPrompt();
+use Blinq\Synth\Prompts\ChatPrompt;
+
+it('has Chat prompts', function (): void {
+    $architectPrompt = new ChatPrompt();
 
     expect($architectPrompt->getFunctions())->toBeArray()
         ->and($architectPrompt->getFunctions())->toHaveCount(1)

@@ -11,7 +11,7 @@ use League\HTMLToMarkdown\HtmlConverter;
 use PhpSchool\CliMenu\CliMenu;
 
 /**
- * This file is a module in the Synth application, specifically for handling attachments.
+ * This file is a module in the Chat application, specifically for handling attachments.
  * It provides functionality to attach and view files, search and attach files, and manage attachments.
  */
 final class Extra extends Module

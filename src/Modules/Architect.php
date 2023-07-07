@@ -7,7 +7,7 @@ namespace Blinq\Synth\Modules;
 use PhpSchool\CliMenu\CliMenu;
 
 /**
- * This file is a module in the Synth application, specifically for handling application architecture.
+ * This file is a module in the Chat application, specifically for handling application architecture.
  * It provides functionality to brainstorm and generate a new application architecture using GPT.
  */
 class Architect extends Module

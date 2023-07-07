@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Blinq\Synth\Modules;
 
-use Blinq\Synth\Prompts\StartSessionPrompt;
+use Blinq\Synth\Prompts\ChatPrompt;
 use PhpSchool\CliMenu\CliMenu;
 
 /**
- * This file is a module in the Synth application, specifically for handling chat interactions.
+ * This file is a module in the Chat application, specifically for handling chat interactions.
  * It provides functionality to chat with GPT and create/update files using the chat interface.
  */
 class StartSession extends Module
@@ -26,7 +26,7 @@ class StartSession extends Module
     public function onSelect(CliMenu $menu): void
     {
         $currentQuestion = 'How can I help?';
-        $this->synthController->setPromptInterface(new StartSessionPrompt());
+        $this->synthController->setPromptInterface(new ChatPrompt());
         $this->synthController->chat($currentQuestion);
     }
 }

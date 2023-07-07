@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// config for Blinq/Synth
+// config for Blinq/Chat
 return [
     // OpenAI api key
     'openai_key' => env('OPENAI_API_KEY'),
@@ -27,7 +27,7 @@ return [
     ],
     // instructions that will be used on all chat completions
     'global_instructions' => [
-        '* Adhere to DRY principles',
+        'Adhere to DRY principles',
     ],
     // The base path to search from
     'file_base' => base_path(),

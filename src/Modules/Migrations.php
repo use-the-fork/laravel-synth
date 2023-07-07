@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Modules;
 
 /**
- * This file is a module in the Synth application, specifically for handling the generation of migrations.
+ * This file is a module in the Chat application, specifically for handling the generation of migrations.
  * It provides functionality to register, select, and refine migrations based on the architecture.
  */
 class Migrations extends Module
@@ -24,9 +26,9 @@ class Migrations extends Module
     {
         $this->synthController->synth->loadSystemMessage('migrations');
 
-        $schema = include __DIR__.'/../Prompts/migrations.schema.php';
+        $schema = include __DIR__ . '/../Prompts/migrations.schema.php';
 
-        if (! $this->synthController->modules->get('Attachments')->getAttachments('architecture')) {
+        if ( ! $this->synthController->modules->get('Attachments')->getAttachments('architecture')) {
             $this->synthController->cmd->error('You need to create an architecture first');
 
             return;
@@ -43,11 +45,11 @@ class Migrations extends Module
             $this->synthController->cmd->info("Press enter to accept and continue, type 'exit' to discard, or ask a follow up question.");
             $answer = $this->synthController->cmd->ask('You');
 
-            if ($answer == 'exit') {
+            if ('exit' == $answer) {
                 break;
             }
 
-            if (! $answer) {
+            if ( ! $answer) {
                 $this->synthController->synth->handleFunctionsForLastMessage();
 
                 break;

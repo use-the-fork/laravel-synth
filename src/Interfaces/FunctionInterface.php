@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blinq\Synth\Interfaces;
 
 interface FunctionInterface
@@ -10,5 +12,5 @@ interface FunctionInterface
 
     public function getFunctionJson(): array;
 
-    public function doFunction(string $jsonString, array $attachedFiles): array;
+    public function doFunction(string $jsonString): array;
 }

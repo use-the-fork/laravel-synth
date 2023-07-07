@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Blinq\Synth;
 
-use Blinq\Synth\Controllers\SynthController;
+use Blinq\Synth\Controllers\ChatController;
 use Blinq\Synth\Traits\WithHooks;
 use PhpSchool\CliMenu\CliMenu;
 
@@ -14,11 +14,11 @@ class MainMenu
 
     public $modules = [];
 
-    protected SynthController $synthController;
+    protected ChatController $synthController;
 
     public function setSynthController(): void
     {
-        $this->synthController = app(SynthController::class);
+        $this->synthController = app(ChatController::class);
     }
 
     public function showTokenCount(): void
@@ -51,7 +51,7 @@ class MainMenu
     public function handle(): void
     {
 
-        $synthController = app(SynthController::class);
+        $synthController = app(ChatController::class);
 
         $menu = $this->synthController->cmd->menu($this->logo())
             ->setTitleSeparator('-')

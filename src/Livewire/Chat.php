@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Blinq\Synth\Livewire;
 
-use Blinq\Synth\Prompts\StartSessionPrompt;
+use Blinq\Synth\Prompts\ChatPrompt;
 use Blinq\Synth\Services\AiService;
 use Blinq\Synth\ValueObjects\ChatMessageValueObject;
 use Livewire\Component;
 
-class Synth extends Component
+class Chat extends Component
 {
     public string $chatText = '';
 
@@ -49,7 +49,7 @@ class Synth extends Component
         );
 
         $aiService = new AiService(
-            systemMessage: new StartSessionPrompt(),
+            systemMessage: new ChatPrompt(),
             attachedFiles: $this->attachedFiles,
         );
 
@@ -60,22 +60,11 @@ class Synth extends Component
             content: $response['message']['content'],
         );
 
-        $this->system['model'] = $response['model'];
-        $this->system['tokens'] = $response['total_tokens'];
-
-        $modal = collect(config('synth.models.chat'))->first(function ($hit) use ($response) {
-            if ($hit['name'] == $response['model']) {
-                return true;
-            }
-        });
-
-        if (
-            ! empty($modal)
-        ) {
-            $this->system['percent'] = round($response['total_tokens'] / $modal['max_tokens'] * 100, 2);
-        }
-
-        $this->system['files'] = count($this->attachedFiles);
+        $this->emit('doUpdateSystemStats', [
+            'model' => $response['model'],
+            'total_tokens' => $response['total_tokens'],
+            'files' => count($this->attachedFiles),
+        ]);
 
         $this->chatText = '';
         $this->setLoading(false);

@@ -8,12 +8,14 @@ use Blinq\Synth\ValueObjects\ChatMessageValueObject;
 
 abstract class TokenService
 {
-    abstract public static function getModalToUse($messages): array;
+    abstract public static function getModalToUse(array $message): array;
 
-    public static function estimateTokenCount($messages): int
+    public static function estimateTokenCount(array $message): int
     {
-        $wordCount = collect($messages)
-            ->reduce(fn ($carry, ChatMessageValueObject $item) => $carry + (mb_strlen($item->getContent()) / 4), 0);
+        $wordCount = collect($message['messages'])
+            ->reduce(fn ($carry, ChatMessageValueObject $item) => $carry + (mb_strlen($item->getContent()) / 4), 0) +
+            collect($message['functions'])
+                ->reduce(fn ($carry, array $item) => $carry + (mb_strlen(json_encode($item)) / 4), 0);
 
         return (int) floor($wordCount * 1);
     }
